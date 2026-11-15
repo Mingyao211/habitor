@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Habitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,800&family=Instrument+Sans:wght@400;500;600;700&family=Inter+Tight:wght@400;600;800&family=Space+Grotesk:wght@400;500;700&family=Fredoka:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a friendly sports club for friends; competitive but never shaming
+   IDEA: a club league table and trophy room that lives in your pocket
+   PICTURE: today's score dial, the live party leaderboard, gold trophies
+   COLOUR+TYPE: cobalt field, trophy gold accent, coral for screens; Archivo wide for numbers, Instrument Sans for text
+   LAYOUT: one phone-width column, cards stacked, bottom tab bar */
+:root{color-scheme:light dark;
+--bg:light-dark(#f4f2ec,#0d0e1a);--card:light-dark(#fff,#171933);--ink:light-dark(#14141c,#f1f0f7);--mut:light-dark(#5f5f6c,#a6a6bb);
+--line:light-dark(#e2dfd6,#2b2d4c);--co:#3346ff;--co-ink:light-dark(#2433d6,#9aa5ff);--co2:light-dark(#e7e9ff,#222a6e);
+--gold:#ffbf1f;--goldk:light-dark(#8a5d00,#ffd668);--cor:#ff6b4a;--ind:#7b61ff;--ok:light-dark(#0f7b4f,#5be0a4);
+--top:var(--co);--top-ink:#fff;--on-co:#fff;--fd:Archivo,system-ui,sans-serif;--fs:112%;--fb:"Instrument Sans",system-ui,sans-serif;--bw:1px;--sh:none}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+:root[data-skin=ritual]{color-scheme:light;--bg:#F2F2EF;--card:#fff;--ink:#141414;--mut:#5E5E5E;--line:#E2E2DE;--co:#141414;--co-ink:#141414;--co2:#ECECE8;--on-co:#fff;--gold:#E8604C;--goldk:#9C3424;--cor:#E8604C;--ind:#5B6BD6;--ok:#1F7A55;--top:#fff;--top-ink:#141414;--fd:"Inter Tight",system-ui,sans-serif;--fs:100%;--fb:"Inter Tight",system-ui,sans-serif}
+:root[data-skin=night]{color-scheme:dark;--bg:#0B0D26;--card:#15183D;--ink:#F3F1FF;--mut:#A9A6D6;--line:#2A2E66;--co:#B9B2FF;--co-ink:#C9C3FF;--co2:#2A2E66;--on-co:#0B0D26;--gold:#FFC94A;--goldk:#FFD668;--cor:#FF8FB1;--ind:#B9B2FF;--ok:#7CE0C3;--top:#15183D;--top-ink:#F3F1FF;--fd:"Space Grotesk",system-ui,sans-serif;--fs:100%;--fb:"Space Grotesk",system-ui,sans-serif}
+:root[data-skin=pop]{color-scheme:light;--bg:#FFF4E6;--card:#fff;--ink:#2B1A12;--mut:#6E5446;--line:#2B1A12;--co:#FF7A2F;--co-ink:#8F3500;--co2:#FFE36E;--on-co:#2B1A12;--gold:#FFC21A;--goldk:#2B1A12;--cor:#E8457F;--ind:#6F55F0;--ok:#1F7A45;--top:#FF5FA2;--top-ink:#2B1A12;--fd:Fredoka,system-ui,sans-serif;--fs:100%;--fb:Fredoka,system-ui,sans-serif;--bw:2px;--sh:4px 4px 0 #2B1A12}
+:root[data-skin=field]{color-scheme:light;--bg:#EEF0E8;--card:#F7F7F2;--ink:#17261F;--mut:#4E5E55;--line:#D9DCD0;--co:#1F4D3A;--co-ink:#1F4D3A;--co2:#E3ECDD;--on-co:#F7F7F2;--gold:#F2C14E;--goldk:#7A5800;--cor:#C8553D;--ind:#2B4C7E;--ok:#2E7D4F;--top:#1F4D3A;--top-ink:#F7F7F2;--fd:Fraunces,Georgia,serif;--fs:100%;--fb:"DM Sans",system-ui,sans-serif}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--fb);overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--co);outline-offset:2px}
+.wrap{max-width:520px;margin:0 auto;padding:16px 16px 104px}
+.top{background:var(--top);color:var(--top-ink);padding:20px 16px 56px}
+.top .in{max-width:520px;margin:0 auto}
+.top h1{font:800 32px/1.05 var(--fd);font-stretch:var(--fs);margin:0;text-wrap:balance}
+.top p{margin:6px 0 0;opacity:.85}
+.lift{margin-top:-44px}
+.num{font-family:var(--fd);font-stretch:var(--fs);font-weight:800}
+.card{background:var(--card);border:var(--bw) solid var(--line);box-shadow:var(--sh);border-radius:20px;padding:18px;margin-bottom:14px}
+.card h2{font-size:18px;margin:0 0 10px;font-weight:700}
+.row{display:flex;align-items:center;gap:12px}
+.sp{flex:1}
+.mut{color:var(--mut)}
+.small{font-size:13px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid color-mix(in srgb,var(--top-ink) 45%,transparent);background:transparent;color:var(--top-ink);border-radius:999px;padding:8px 14px;min-height:40px}
+.chip.on{background:var(--top-ink);color:var(--top);border-color:var(--top-ink);font-weight:600}
+.btn{border:0;border-radius:14px;padding:12px 18px;min-height:46px;background:var(--co);color:var(--on-co);font-weight:600}
+.btn.ghost{background:var(--co2);color:var(--co-ink)}
+.btn.line{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.danger{background:transparent;border:1px solid var(--cor);color:var(--cor)}
+.btn.sm{min-height:40px;padding:8px 14px;border-radius:12px;font-size:15px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+input[type=text],input[type=number],input[type=time],textarea,select{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;font-size:16px;min-height:46px}
+textarea{resize:vertical;min-height:80px}
+label.f{display:block;font-size:14px;font-weight:600;margin:12px 0 6px}
+.dial{display:grid;grid-template-columns:140px minmax(0,1fr);gap:16px;align-items:center}
+.dial svg{width:140px;height:140px}
+.big{font-size:44px;line-height:1}
+.habit{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.habit:first-of-type{border-top:0}
+.emo{width:44px;height:44px;border-radius:14px;background:var(--co2);display:grid;place-items:center;font-size:22px;flex:none}
+.tick{width:48px;height:48px;border-radius:50%;border:2px solid var(--line);background:transparent;display:grid;place-items:center;flex:none;transition:transform .15s}
+.tick.on{background:var(--co);border-color:var(--co);color:var(--on-co)}
+.tick.on svg{animation:pop .25s ease-out}
+@keyframes pop{from{transform:scale(.4)}to{transform:scale(1)}}
+.x{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--cor);flex:none}
+.add{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:8px;margin-top:12px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.meter{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:8px 0 4px}
+.meter i{display:block;height:100%;border-radius:99px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cal .h{font-size:12px;color:var(--mut);text-align:center}
+.cell{aspect-ratio:1;border-radius:12px;border:1px solid var(--line);background:color-mix(in srgb,var(--co) calc(var(--a,0)*100%),var(--card));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;font-size:14px}
+.cell.hi{color:var(--on-co)}
+.cell.sel{outline:3px solid var(--gold);outline-offset:1px}
+.cell.fut{opacity:.4}
+.dots{display:flex;gap:3px;height:6px}
+.dots i{width:6px;height:6px;border-radius:50%}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-top:12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.lb{list-style:none;margin:0;padding:0}
+.lb li{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:14px;cursor:pointer}
+.lb li.me{background:var(--co2)}
+.rk{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--line);flex:none;font-family:var(--fd)}
+.rk.g{background:var(--gold);color:#3a2700}
+.av{width:44px;height:44px;border-radius:50%;background:var(--co2);display:grid;place-items:center;font-size:24px;flex:none}
+.av.xl{width:96px;height:96px;font-size:54px;border:4px solid var(--card)}
+.sc{text-align:right;max-width:46%}
+.sc b{display:block;white-space:nowrap}
+.pcard{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--card);border:var(--bw) solid var(--line);box-shadow:var(--sh);border-radius:20px;padding:16px;margin-bottom:12px}
+.pe{width:52px;height:52px;border-radius:16px;background:var(--co);display:grid;place-items:center;font-size:28px;flex:none}
+.code{font-family:var(--fd);font-weight:800;font-stretch:var(--fs);letter-spacing:.12em;font-size:22px}
+.trophies{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.tro{border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center;background:linear-gradient(var(--card),color-mix(in srgb,var(--gold) 12%,var(--card)))}
+.tro b{display:block;font-size:14px}
+.empty{text-align:center;padding:18px 8px;color:var(--mut)}
+.stats3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center}
+.stats3 .num{font-size:28px;display:block}
+.avpick{display:flex;flex-wrap:wrap;gap:8px}
+.avpick label{cursor:pointer}
+.avpick input{position:absolute;opacity:0;pointer-events:none}
+.avpick span{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:26px;border:2px solid var(--line)}
+.avpick input:checked+span{border-color:var(--co);background:var(--co2)}
+.avpick input:focus-visible+span{outline:3px solid var(--co)}
+.chs{display:grid;gap:8px}
+.cho{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px;background:transparent;text-align:left;width:100%}
+.cho.on{border-color:var(--co);background:var(--co2)}
+.skins{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.skin{display:flex;flex-direction:column;gap:8px;align-items:flex-start;border:2px solid var(--line);border-radius:16px;padding:12px;background:transparent;text-align:left;min-height:44px}
+.skin.on{border-color:var(--co);background:var(--co2)}
+.skin .sw{display:flex;gap:4px}.skin .sw i{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.15)}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+.tabs .in{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;max-width:520px}
+.tabs button{border:0;background:transparent;padding:10px 4px 12px;min-height:64px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--mut)}
+.tabs button.on{color:var(--co-ink);font-weight:700}
+.tabs svg{width:24px;height:24px}
+.ov{position:fixed;inset:0;background:rgba(10,10,30,.55);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.sheet{background:var(--bg);width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;padding:20px 18px 28px}
+.sheet h2{font:800 26px/1.1 var(--fd);font-stretch:var(--fs);margin:0 0 6px}
+.toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:20;max-width:90vw;font-size:15px}
+.note{background:color-mix(in srgb,var(--gold) 22%,var(--card));border:1px solid color-mix(in srgb,var(--gold) 50%,var(--line));border-radius:14px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+.load{min-height:80vh;display:grid;place-items:center;text-align:center;color:var(--mut)}
+.err{color:var(--cor);font-size:14px;margin-top:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:380px){.dial{grid-template-columns:110px minmax(0,1fr)}.dial svg{width:110px;height:110px}.big{font-size:36px}}
+</style>
+</head>
+<body>
+<div id="app"><div class="load"><div><div class="num" style="font-size:28px;color:var(--co-ink)">Habitor</div><p>Loading your club…</p></div></div></div>
+<div id="modal"></div>
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const dkey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseK=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d||1)};
+const addDays=(k,n)=>{const d=parseK(k);d.setDate(d.getDate()+n);return dkey(d)};
+const addMonths=(m,n)=>{const d=parseK(m+'-01');d.setMonth(d.getMonth()+n);return dkey(d).slice(0,7)};
+const todayK=()=>dkey(new Date());
+const curM=()=>todayK().slice(0,7);
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const mLabel=m=>`${MONTHS[+m.slice(5,7)-1]} ${m.slice(0,4)}`;
+const dLabel=k=>parseK(k).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+const monthDays=m=>{const d=parseK(m+'-01');const n=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();return Array.from({length:n},(_,i)=>`${m}-${pad(i+1)}`)};
+const fmtMin=v=>{v=Math.round(v);const h=Math.floor(v/60),m=v%60;return h?`${h}h ${pad(m)}m`:`${m}m`};
+const num=v=>typeof v==='number'&&isFinite(v);
+const clock12=x=>{const m=/^(\d{1,2}):(\d{2})/.exec(x||'');if(!m)return x;const h=+m[1];return `${h%12||12}:${m[2]} ${h<12?'am':'pm'}`};
+const clockMins=x=>{const m=/^(\d{1,2}):(\d{2})/.exec(x||'');if(!m)return null;const v=(+m[1])*60+(+m[2]);return v<720?v+1440:v};
+const sleepMins=(b,w)=>{const t=x=>{const m=/^(\d{1,2}):(\d{2})/.exec(x||'');return m?(+m[1])*60+(+m[2]):null};const a=t(b),c=t(w);if(a==null||c==null)return 0;return (c-a+1440)%1440};
+const rnd=(n,abc)=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>abc[b%32]).join('');
+const rid=()=>rnd(12,'abcdefghijkmnpqrstuvwxyz23456789');
+const code6=()=>rnd(6,'ABCDEFGHJKLMNPQRSTUVWXYZ23456789');
+const deepMerge=(a,b)=>{const o={...a};for(const k in b){const v=b[k],c=o[k];o[k]=(v&&typeof v==='object'&&!Array.isArray(v)&&c&&typeof c==='object'&&!Array.isArray(c))?deepMerge(c,v):v}return o};
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+const CH={
+ screen:{name:'Lowest screen time',rule:'Lowest average daily screen time wins',lower:true},
+ sleep:{name:'Sleep champion',rule:'Most nights with 7.5 hours or more of sleep'},
+ habits:{name:'Habit master',rule:'Most days with every habit ticked off'},
+ streak:{name:'Streak king',rule:'Longest run of perfect habit days'}};
+const TIPS={
+ sleep:['Wake up at the same time every day, weekends too. A steady wake-up time anchors your body clock, so falling asleep gets easier.',
+ 'Put your phone on charge across the room or outside your bedroom 30 minutes before bed.',
+ 'Dim your screens and turn on Night Shift or Bedtime mode for the last hour before bed.',
+ 'Skip coffee, tea and energy drinks after 2 pm. Caffeine can keep you alert for six hours or more.',
+ 'Keep your room cool, dark and quiet. An eye mask or earplugs are cheap fixes that work.',
+ 'Get outside within an hour of waking up. Morning daylight helps you feel sleepy earlier at night.',
+ 'Set a wind-down alarm 45 minutes before your target bedtime, then start a calm routine: shower, read, stretch.',
+ 'Move your bedtime 15 minutes earlier every few nights instead of all at once.',
+ 'Can\'t fall asleep after about 20 minutes? Get up, do something calm in dim light, then try again.'],
+ screen:['Set app limits on your two most-used apps: Screen Time on iPhone, Digital Wellbeing on Android.',
+ 'Turn off notifications for everything except messages from real people.',
+ 'Move social apps off your home screen into a folder on the last page.',
+ 'Try grayscale mode in the evening. A colourless phone is far less tempting to scroll.',
+ 'Leave your phone in another room while you study, eat or hang out with friends.',
+ 'Swap one scrolling session for something offline: a walk, a book, a game with friends.',
+ 'Log out of the app you open most. The extra login step breaks the automatic habit.',
+ 'Turn on Downtime or Bedtime mode so only calls and a few key apps work late at night.',
+ 'Before you unlock your phone, ask yourself what you picked it up for.']};
+const AV=['🦊','🐼','🐸','🦉','🐯','🐙','🦄','🐻','🐧','🐨','🦁','🐳'];
+const PE=['🔥','🌙','📵','💪','⚡','🌱','🎯','🎉'];
+const SKINS=[['ritual','Quiet Ritual','Minimal white, coral dot',['#141414','#FFFFFF','#E8604C']],['night','Night Owl','Midnight, lavender, gold moon',['#0B0D26','#B9B2FF','#FFC94A']],['club','Club League','Cobalt and trophy gold',['#3346FF','#FFBF1F','#F4F2EC']],['pop','Sunrise Pop','Loud, warm and playful',['#FF7A2F','#FF5FA2','#FFE36E']],['field','Field Notes','Forest green and sunlight',['#1F4D3A','#CFE3C8','#F2C14E']]];
+const SKEY='streak-party-skin';
+function applySkin(k){if(!SKINS.some(x=>x[0]===k))k='club';document.documentElement.dataset.skin=k;try{localStorage.setItem(SKEY,k)}catch(e){}}
+try{applySkin(localStorage.getItem(SKEY)||'club')}catch(e){applySkin('club')}
+
+const S={tips:{},ready:false,local:false,uid:null,tab:'today',day:todayK(),calM:curM(),calSel:todayK(),party:null,modal:null,edit:false,
+ profiles:{},stats:{},parties:{},trophies:{},priv:null,privPending:0,lastPriv:undefined,loaded:{p:false,v:false},slow:false,readonly:false,err:{}};
+
+/* ---------- storage: shared db when available, this browser otherwise ---------- */
+let store;
+function makeLocal(){
+ const KEY='streak-party-local-v1';let data={};
+ try{data=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){}
+ const subs=[];const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}};
+ const col=p=>{const n=p.split('/').length+1;return Object.keys(data).filter(k=>k.startsWith(p+'/')&&k.split('/').length===n).map(k=>({id:k.split('/').pop(),data:data[k]}))};
+ const emit=()=>subs.forEach(s=>s.col?s.cb(col(s.p)):s.cb(data[s.p]||null));
+ return{local:true,
+  subDoc(p,cb){subs.push({p,cb});setTimeout(()=>cb(data[p]||null))},
+  subCol(p,cb){subs.push({p,cb,col:true});setTimeout(()=>cb(col(p)))},
+  async set(p,v){data[p]=clone(v);save();emit()},
+  async merge(p,v){data[p]=deepMerge(data[p]||{},clone(v));save();emit()}};
+}
+function makeRemote(db){
+ return{local:false,
+  subDoc(p,cb,err){return db.doc(p).onSnapshot(s=>cb(s.exists?s.data():null),err)},
+  subCol(p,cb,err){return db.collection(p).onSnapshot(q=>cb(q.docs.map(d=>({id:d.id,data:d.data()}))),err)},
+  set:(p,v)=>db.doc(p).set(v),
+  async merge(p,v){const r=db.doc(p);const s=await r.get();return s.exists?r.update(v):r.set(v)}};
+}
+const Q={};
+function write(path,fn){
+ const p=(Q[path]||Promise.resolve()).then(fn).catch(e=>{
+  const c=e&&e.code;
+  if(c==='invalid_argument'){S.readonly=true;toast("Couldn't save. Ask the app's owner to share it with you as an Editor.")}
+  else if(c==='quota_exceeded')toast('The app is out of storage space.');
+  else toast("Couldn't save just now. Try again.");
+  render();});
+ Q[path]=p;return p;
+}
+
+/* ---------- derived data ---------- */
+const me=()=>S.profiles[S.uid];
+const priv=()=>S.priv||{habits:[],logs:{},goals:{}};
+const goals=()=>({sleepH:7.5,screenMin:180,bed:'23:30',...(priv().goals||{})});
+const myDays=()=>(S.stats[S.uid]&&S.stats[S.uid].days)||{};
+const daySum=(k,st=priv())=>{const ids=st.habits.map(h=>h.id);return{done:(st.logs[k]||[]).filter(id=>ids.includes(id)).length,total:ids.length}};
+const perfect=d=>d&&num(d.total)&&d.total>0&&d.done>=d.total;
+const myParties=()=>Object.entries(S.parties).filter(([,p])=>p&&p.members&&p.members[S.uid]).map(([id,p])=>({id,...p})).sort((a,b)=>(a.created||0)-(b.created||0));
+function habitStreak(id){const L=priv().logs;let k=todayK();if(!(L[k]||[]).includes(id))k=addDays(k,-1);let n=0;while((L[k]||[]).includes(id)&&n<3660){n++;k=addDays(k,-1)}return n}
+function dayStreaks(days){const ks=Object.keys(days||{}).filter(k=>k<=todayK()).sort();let best=0,run=0,prev=null;
+ for(const k of ks){if(perfect(days[k])){run=(prev&&addDays(prev,1)===k)?run+1:1;prev=k;best=Math.max(best,run)}else{run=0;prev=null}}
+ let cur=0,k=todayK();if(!perfect(days[k]))k=addDays(k,-1);while(perfect(days[k])&&cur<3660){cur++;k=addDays(k,-1)}
+ return{best,cur}}
+function score(type,days,m){
+ const ks=monthDays(m).filter(k=>k<=todayK()),list=ks.map(k=>(days&&days[k])||{}),need=Math.min(10,ks.length);
+ if(type==='screen'){const v=list.filter(d=>num(d.screenMin));if(!v.length)return null;const a=v.reduce((s,d)=>s+d.screenMin,0)/v.length;return{v:a,n:v.length,q:v.length>=need,txt:fmtMin(a)+' a day',sub:`${v.length} day${v.length==1?'':'s'} logged`}}
+ if(type==='sleep'){const v=list.filter(d=>num(d.sleepH));if(!v.length)return null;const c=v.filter(d=>d.sleepH>=7.5).length;return{v:c,n:v.length,q:true,txt:`${c} night${c==1?'':'s'}`,sub:`of ${v.length} logged`}}
+ const t=list.filter(d=>num(d.total)&&d.total>0);if(!t.length)return null;const pf=list.map(perfect);
+ if(type==='habits'){const c=pf.filter(Boolean).length;return{v:c,n:t.length,q:true,txt:`${c} perfect day${c==1?'':'s'}`,sub:`${t.length} days tracked`}}
+ let best=0,run=0;pf.forEach(p=>{run=p?run+1:0;best=Math.max(best,run)});return{v:best,n:t.length,q:true,txt:`${best} day${best==1?'':'s'}`,sub:'longest run'}
+}
+function board(p,m){
+ const c=p.challenges&&p.challenges[m];if(!c||!CH[c.type])return null;const lower=CH[c.type].lower;
+ const rows=Object.keys(p.members||{}).map(uid=>({uid,s:score(c.type,S.stats[uid]&&S.stats[uid].days,m)}));
+ rows.sort((a,b)=>{if(!a.s||!b.s)return a.s?-1:b.s?1:0;if(a.s.q!==b.s.q)return a.s.q?-1:1;const d=lower?a.s.v-b.s.v:b.s.v-a.s.v;return Math.abs(d)>1e-9?d:b.s.n-a.s.n});
+ let rank=0,prev=null;rows.forEach((r,i)=>{if(!r.s){r.rank=null;return}const key=r.s.q+'|'+r.s.v.toFixed(3)+'|'+r.s.n;if(key!==prev){rank=i+1;prev=key}r.rank=rank});
+ return{c,rows};
+}
+const monthEnd=m=>monthDays(m).at(-1);
+const awardDay=m=>addDays(monthEnd(m),3);
+const closed=m=>todayK()>=awardDay(m);
+const trophiesOf=uid=>Object.entries(S.trophies).map(([id,t])=>({id,...t})).filter(t=>Array.isArray(t.winners)&&t.winners.includes(uid)).sort((a,b)=>String(b.m).localeCompare(String(a.m)));
+function awardCheck(){
+ if(!S.ready||S.readonly)return;
+ for(const p of myParties())for(const m of Object.keys(p.challenges||{})){
+  if(!closed(m))continue;const tid=`${p.id}_${m}`;if(S.trophies[tid])continue;
+  const b=board(p,m);if(!b)continue;const w=b.rows.filter(r=>r.rank===1).map(r=>r.uid);if(!w.length)continue;
+  const t={party:p.id,partyName:p.name||'Party',emoji:p.emoji||'🏆',m,type:b.c.type,winners:w,score:b.rows[0].s.txt,at:Date.now()};
+  S.trophies={...S.trophies,[tid]:t};write('trophies/'+tid,()=>store.set('trophies/'+tid,t));
+ }
+}
+
+/* ---------- writes ---------- */
+function savePriv(next){
+ S.priv=next;S.privPending++;render();const path=`data/users/${S.uid}/state`,snap=clone(next);
+ write(path,()=>store.set(path,snap)).finally(()=>{S.privPending--;if(!S.privPending&&S.lastPriv!==undefined){S.priv=S.lastPriv||S.priv;S.lastPriv=undefined}});
+}
+function pushDay(k,extra){
+ const s=daySum(k),patch={done:s.done,total:s.total,...(extra||{})},uid=S.uid;
+ const cur=S.stats[uid]||{days:{}};S.stats={...S.stats,[uid]:{...cur,days:{...(cur.days||{}),[k]:{...((cur.days||{})[k]||{}),...patch}}}};
+ write('stats/'+uid,()=>store.merge('stats/'+uid,{days:{[k]:patch}}));render();
+}
+
+/* ---------- small UI helpers ---------- */
+let tt;function toast(m){clearTimeout(tt);let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=m;tt=setTimeout(()=>t.remove(),3200)}
+const cup=(s=56)=>`<svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true"><path d="M18 12H9v4a10 10 0 0 0 10 10M46 12h9v4a10 10 0 0 1-10 10" fill="none" stroke="var(--gold)" stroke-width="4"/><path d="M17 7h30v15a15 15 0 0 1-30 0z" fill="var(--gold)"/><path d="M23 11v10a9 9 0 0 0 5 8" stroke="#fff" stroke-opacity=".55" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="29" y="36" width="6" height="9" fill="var(--gold)"/><rect x="19" y="45" width="26" height="9" rx="2" fill="var(--goldk)"/></svg>`;
+const ICON={today:'<path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+ calendar:'<rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+ parties:'<circle cx="8" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16.5" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 19c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5M11 19c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+ profile:'<path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5M12 14v4M8 20h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'};
+const check='<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const nameOf=uid=>{const p=S.profiles[uid];return p?(p.name||p.username||'Friend'):'Friend'};
+const avOf=uid=>esc((S.profiles[uid]&&S.profiles[uid].avatar)||'🙂');
+function banners(){
+ let h='';if(S.local)h+=`<div class="note">Preview mode: data is saved in this browser only. Open the shared link while signed in to Claude to sync with friends.</div>`;
+ if(S.readonly)h+=`<div class="note">You can look around, but saving is off. Ask the app's owner to share it with you as an Editor.</div>`;
+ if(S.slow&&!S.ready)h+=`<div class="note">Live data can't be reached yet. Still trying…</div>`;return h;
+}
+
+/* ---------- views ---------- */
+function vToday(){
+ const st=priv(),k=S.day,logs=st.logs[k]||[],d=myDays()[k]||{},g=goals(),ds=daySum(k),pct=ds.total?ds.done/ds.total:0,C=351.86;
+ const chips=[0,-1,-2].map(n=>{const kk=addDays(todayK(),n);return `<button class="chip ${kk===k?'on':''}" data-act="day" data-k="${kk}">${n===0?'Today':n===-1?'Yesterday':esc(dLabel(kk))}</button>`}).join('');
+ const habits=st.habits.map(h=>{const on=logs.includes(h.id),sk=habitStreak(h.id);return `<div class="habit"><div class="emo">${esc(h.emoji||'•')}</div><div class="sp"><div style="font-weight:600">${esc(h.name)}</div><div class="small mut">${sk?`${sk}-day streak`:'No streak yet'}</div></div>${S.edit?`<button class="x" data-act="delhabit" data-id="${h.id}" aria-label="Delete ${esc(h.name)}">✕</button>`:`<button class="tick ${on?'on':''}" data-act="toggle" data-id="${h.id}" aria-pressed="${on}" aria-label="${on?'Undo':'Done'}: ${esc(h.name)}">${on?check:''}</button>`}</div>`}).join('');
+ const sl=num(d.sleepH)?d.sleepH:null,sm=num(d.screenMin)?d.screenMin:null;
+ const prev=myDays()[addDays(k,-1)]||{},bed=d.bed||prev.bed||'23:30',wake=d.wake||prev.wake||'07:30',sleepFirst=sl==null&&k===todayK();
+const dn=Math.floor(parseK(k).getTime()/864e5),tip=(t,n)=>TIPS[t][((dn+n)%TIPS[t].length+TIPS[t].length)%TIPS[t].length];
+ const lateBy=d.bed&&clockMins(d.bed)!=null&&clockMins(g.bed)!=null?clockMins(d.bed)-clockMins(g.bed):0,shortBy=sl!=null?Math.round(g.sleepH*60-sl*60):0,overBy=sm!=null?sm-g.screenMin:0;
+ const why=[lateBy>0?`You went to bed ${fmtMin(lateBy)} after your ${esc(clock12(g.bed))} target.`:'',shortBy>0?`You slept ${fmtMin(shortBy)} less than your goal.`:''].filter(Boolean).join(' ');
+ const tipCard=(t,title,reason)=>`<section class="card" style="border-color:var(--co)"><div class="row" style="align-items:flex-start"><div class="sp"><div class="small mut">${title}</div><p style="margin:2px 0 0;font-weight:600">${reason}</p></div></div><p style="margin:10px 0 0">${esc(tip(t,S.tips[t]||0))}</p><div class="btns" style="margin-top:10px"><button class="btn line sm" data-act="tip" data-t="${t}">Another tip</button></div></section>`;
+ const tips=(sl!=null&&why?tipCard('sleep','Sleep tip',why):'')+(overBy>0?tipCard('screen','Screen time tip',`You were on screens ${fmtMin(overBy)} over your ${fmtMin(g.screenMin)} limit.`):'');
+ const sleepCard=`<section class="card"><h2>${sl==null?'How did you sleep?':'Sleep'}</h2><form data-form="sleep"><div class="two"><div><label class="f" for="sb">Went to bed</label><input id="sb" type="time" name="bed" value="${esc(bed)}" required></div><div><label class="f" for="sw">Woke up</label><input id="sw" type="time" name="wake" value="${esc(wake)}" required></div></div>
+ <p style="margin:12px 0 0">You slept <b class="num" id="sdur">${esc(fmtMin(sleepMins(bed,wake)))}</b></p>
+ ${sl!=null?`<div class="meter"><i style="width:${Math.min(100,sl/g.sleepH*100)}%;background:var(--ind)"></i></div><div class="small mut">${sl>=g.sleepH?'Goal met':'Goal'}: ${fmtMin(g.sleepH*60)}</div>`:`<p class="small mut" style="margin:6px 0 0">Your goal is ${fmtMin(g.sleepH*60)}. Times past midnight count as the next morning.</p>`}
+ <div class="btns" style="margin-top:12px"><button class="btn ${sl==null?'':'ghost'}">${sl==null?'Save last night':'Update sleep'}</button></div></form></section>`;
+ return `<header class="top"><div class="in"><h1>Hi ${esc((me()||{}).name||'there')}</h1><p>${esc(dLabel(k))}</p><div class="chips" style="margin-top:14px">${chips}</div></div></header>
+ <main class="wrap lift">${banners()}${sleepFirst?sleepCard:''}
+ <section class="card"><div class="dial"><svg viewBox="0 0 140 140" role="img" aria-label="${ds.done} of ${ds.total} habits done"><circle cx="70" cy="70" r="56" fill="none" stroke="var(--co2)" stroke-width="14"/><circle cx="70" cy="70" r="56" fill="none" stroke="var(--co)" stroke-width="14" stroke-linecap="round" stroke-opacity="${pct?1:0}" stroke-dasharray="${(pct*C).toFixed(1)} ${C}" transform="rotate(-90 70 70)"/><text x="70" y="80" text-anchor="middle" style="font-family:var(--fd)" font-weight="800" font-size="30" fill="currentColor">${Math.round(pct*100)}%</text></svg>
+ <div><div class="num big">${ds.done}/${ds.total}</div><div class="mut">habits done${ds.total&&ds.done>=ds.total?' — perfect day!':''}</div><div class="small mut" style="margin-top:8px">Sleep ${sl!=null?fmtMin(sl*60):'not logged'} · Screens ${sm!=null?fmtMin(sm):'not logged'}</div></div></div></section>${tips}${tips?'<p class="small mut" style="margin:-6px 4px 14px">General tips, not medical advice. If poor sleep goes on for weeks, talk to a doctor.</p>':''}
+ <section class="card"><div class="row"><h2 class="sp" style="margin:0">Habits</h2>${st.habits.length?`<button class="btn line sm" data-act="edit">${S.edit?'Done':'Edit'}</button>`:''}</div>
+ <div style="margin-top:6px">${habits||'<div class="empty">Add your first habit below — drink water, read 20 min, no phone in bed…</div>'}</div>
+ <form class="add" data-form="addhabit"><input type="text" name="emoji" maxlength="4" placeholder="📚" aria-label="Habit emoji"><input type="text" name="name" maxlength="40" placeholder="New habit" aria-label="Habit name" required><button class="btn">Add</button></form></section>
+ ${sleepFirst?'':sleepCard}
+ <section class="card"><h2>Screen time</h2><form data-form="screen"><div class="two"><div><label class="f" for="th">Hours</label><input id="th" type="number" name="hh" min="0" max="24" step="1" value="${sm!=null?Math.floor(sm/60):''}" placeholder="3"></div><div><label class="f" for="tm">Minutes</label><input id="tm" type="number" name="mm" min="0" max="59" step="1" value="${sm!=null?sm%60:''}" placeholder="20"></div></div>
+ ${sm!=null?`<div class="meter"><i style="width:${Math.min(100,sm/g.screenMin*100)}%;background:${sm<=g.screenMin?'var(--ok)':'var(--cor)'}"></i></div><div class="small mut">${sm<=g.screenMin?'Under your goal of':'Over your goal of'} ${fmtMin(g.screenMin)}</div>`:`<p class="small mut" style="margin:8px 0 0">Copy today's total from Screen Time (iPhone) or Digital Wellbeing (Android).</p>`}
+ <div class="btns" style="margin-top:12px"><button class="btn ghost">Save screen time</button></div></form></section></main>`;
+}
+function vCal(){
+ const m=S.calM,days=myDays(),g=goals(),first=parseK(m+'-01'),lead=(first.getDay()+6)%7,t=todayK();
+ let cells=['M','T','W','T','F','S','S'].map(x=>`<div class="h">${x}</div>`).join('')+'<div></div>'.repeat(lead);
+ for(const k of monthDays(m)){const d=days[k]||{},a=d.total?Math.min(1,d.done/d.total):0,fut=k>t;
+  const dots=(num(d.sleepH)&&d.sleepH>=g.sleepH?'<i style="background:var(--ind)"></i>':'')+(num(d.screenMin)&&d.screenMin<=g.screenMin?'<i style="background:var(--cor)"></i>':'');
+  cells+=`<button class="cell ${a>.55?'hi':''} ${k===S.calSel?'sel':''} ${fut?'fut':''}" style="--a:${(a*.9).toFixed(2)}" data-act="calday" data-k="${k}" ${fut?'disabled':''} aria-label="${esc(dLabel(k))}"><span>${+k.slice(8)}</span><span class="dots">${dots}</span></button>`}
+ const sel=S.calSel&&S.calSel.slice(0,7)===m?S.calSel:null;let det='';
+ if(sel){const d=days[sel]||{},st=priv(),done=st.habits.filter(h=>(st.logs[sel]||[]).includes(h.id)),miss=st.habits.filter(h=>!(st.logs[sel]||[]).includes(h.id));
+  det=`<section class="card"><h2>${esc(dLabel(sel))}</h2><div class="small mut">Habits</div><p style="margin:4px 0 10px">${done.length?done.map(h=>esc((h.emoji||'')+' '+h.name)).join(', '):'None ticked'}${miss.length&&done.length?`<br><span class="mut small">Missed: ${miss.map(h=>esc(h.name)).join(', ')}</span>`:''}</p>
+  <div class="two"><div><div class="small mut">Sleep</div><div class="num" style="font-size:22px">${num(d.sleepH)?fmtMin(d.sleepH*60):'—'}</div>${d.bed?`<div class="small mut">${esc(d.bed)}${d.wake?' to '+esc(d.wake):''}</div>`:''}</div><div><div class="small mut">Screen time</div><div class="num" style="font-size:22px">${num(d.screenMin)?fmtMin(d.screenMin):'—'}</div></div></div></section>`}
+ const s=dayStreaks(days);
+ return `<header class="top"><div class="in"><h1>My calendar</h1><p>Current streak ${s.cur} perfect day${s.cur==1?'':'s'} · best ${s.best}</p></div></header>
+ <main class="wrap lift">${banners()}<section class="card"><div class="row" style="margin-bottom:12px"><button class="btn line sm" data-act="calm" data-n="-1" aria-label="Previous month">‹</button><h2 class="sp" style="text-align:center;margin:0">${mLabel(m)}</h2><button class="btn line sm" data-act="calm" data-n="1" aria-label="Next month" ${m>=curM()?'disabled':''}>›</button></div>
+ <div class="cal">${cells}</div><div class="legend"><span><i style="background:var(--co)"></i>Habits done (darker = more)</span><span><i style="background:var(--ind)"></i>Sleep goal met</span><span><i style="background:var(--cor)"></i>Screen goal met</span></div></section>${det}</main>`;
+}
+function lbHTML(p,m){
+ const b=board(p,m);if(!b)return '';
+ return `<ul class="lb">${b.rows.map(r=>`<li class="${r.uid===S.uid?'me':''}" data-act="profile" data-uid="${esc(r.uid)}" tabindex="0" role="button"><span class="rk ${r.rank===1?'g':''}">${r.rank??'–'}</span><span class="av">${avOf(r.uid)}</span><span class="sp"><b>${esc(nameOf(r.uid))}${r.uid===S.uid?' (you)':''}</b><br><span class="small mut">@${esc((S.profiles[r.uid]||{}).username||'')}</span></span><span class="sc">${r.s?`<b>${esc(r.s.txt)}</b><span class="small mut">${esc(r.s.sub)}${r.s.q?'':' · needs 10 days'}</span>`:'<span class="small mut">No entries yet</span>'}</span></li>`).join('')}</ul>`;
+}
+function vParties(){
+ const ps=myParties();
+ if(S.party&&S.parties[S.party]&&S.parties[S.party].members&&S.parties[S.party].members[S.uid])return vParty(S.party);
+ const list=ps.map(p=>{const m=curM(),b=board(p,m),mine=b&&b.rows.find(r=>r.uid===S.uid);return `<button class="pcard" data-act="openparty" data-id="${esc(p.id)}"><span class="pe">${esc(p.emoji||'🎉')}</span><span class="sp"><b>${esc(p.name)}</b><br><span class="small mut">${Object.keys(p.members||{}).length} member${Object.keys(p.members||{}).length==1?'':'s'} · ${b?esc(CH[b.c.type].name):'No challenge this month'}</span></span>${mine&&mine.rank?`<span class="rk ${mine.rank===1?'g':''}">${mine.rank}</span>`:''}</button>`}).join('');
+ return `<header class="top"><div class="in"><h1>Parties</h1><p>Challenge your friends. The month's winner takes the trophy.</p></div></header>
+ <main class="wrap lift">${banners()}${list||`<section class="card empty">${cup(64)}<p>You're not in a party yet. Start one and share the code, or join with a friend's code.</p></section>`}
+ <div class="btns"><button class="btn" data-act="modal" data-k="newparty">Create a party</button><button class="btn ghost" data-act="modal" data-k="join">Join with a code</button></div></main>`;
+}
+function vParty(id){
+ const p={id,...S.parties[id]},m=curM(),host=p.host===S.uid,c=p.challenges&&p.challenges[m],day=+todayK().slice(8),left=monthDays(m).length-day;
+ const canPick=host&&(!c||day<=7);
+ const picker=canPick?`<section class="card"><h2>${c?'Change':'Pick'} this month's challenge</h2><p class="small mut" style="margin-top:-4px">As host you can change it until the 7th.</p><div class="chs">${Object.entries(CH).map(([k,v])=>`<button class="cho ${c&&c.type===k?'on':''}" data-act="pick" data-t="${k}"><span class="sp"><b>${v.name}</b><br><span class="small mut">${v.rule}</span></span></button>`).join('')}</div></section>`:'';
+ const past=Object.entries(S.trophies).filter(([,t])=>t.party===id).sort((a,b)=>String(b[1].m).localeCompare(String(a[1].m))).map(([,t])=>`<li style="cursor:default"><span>${cup(36)}</span><span class="sp"><b>${esc(mLabel(t.m))}</b><br><span class="small mut">${esc((CH[t.type]||{}).name||'')}</span></span><span class="sc"><b>${(t.winners||[]).map(u=>esc(nameOf(u))).join(' & ')}</b><span class="small mut">${esc(t.score||'')}</span></span></li>`).join('');
+ return `<header class="top"><div class="in"><button class="chip" data-act="back" style="margin-bottom:12px">‹ All parties</button><h1>${esc(p.emoji||'')} ${esc(p.name)}</h1><p>${Object.keys(p.members||{}).length} member${Object.keys(p.members||{}).length==1?'':'s'} · hosted by ${esc(nameOf(p.host))}</p></div></header>
+ <main class="wrap lift">${banners()}
+ <section class="card"><div class="row"><div class="sp"><div class="small mut">${esc(mLabel(m))} challenge</div><h2 style="margin:2px 0 0">${c?esc(CH[c.type].name):'Not picked yet'}</h2></div>${cup(48)}</div>
+ ${c?`<p class="small mut" style="margin:6px 0 12px">${esc(CH[c.type].rule)}. ${left} day${left==1?'':'s'} left · trophy awarded ${esc(dLabel(awardDay(m)))}.</p>${lbHTML(p,m)}`:`<p class="mut">${host?'Pick a challenge below to start the leaderboard.':'Waiting for the host to pick this month\'s challenge.'}</p>`}</section>
+ ${picker}
+ <section class="card"><h2>Invite friends</h2><div class="row"><span class="code sp">${esc(p.code)}</span><button class="btn ghost sm" data-act="copy" data-code="${esc(p.code)}">Copy code</button></div><p class="small mut" style="margin:8px 0 0">Friends open this app, tap Parties › Join with a code.</p></section>
+ <section class="card"><h2>Past winners</h2>${past?`<ul class="lb">${past}</ul>`:'<div class="empty small">No finished challenges yet.</div>'}</section>
+ <button class="btn danger" data-act="leave" data-id="${esc(id)}">Leave party</button></main>`;
+}
+function trophyGrid(uid){
+ const t=trophiesOf(uid);
+ return t.length?`<div class="trophies">${t.map(x=>`<div class="tro">${cup(56)}<b>${esc((CH[x.type]||{}).name||'Champion')}</b><span class="small mut">${esc(mLabel(x.m))}<br>${esc(x.emoji||'')} ${esc(x.partyName||'')}</span></div>`).join('')}</div>`:`<div class="empty">${cup(48)}<p style="margin:6px 0 0">No trophies yet. Win a monthly challenge to fill this shelf.</p></div>`;
+}
+function vProfile(){
+ const p=me()||{},s=dayStreaks(myDays()),g=goals();
+ return `<header class="top" style="text-align:center;padding-bottom:64px"><div class="in"><div class="av xl" style="margin:0 auto 10px">${esc(p.avatar||'🙂')}</div><h1>${esc(p.name)}</h1><p>@${esc(p.username)}</p></div></header>
+ <main class="wrap lift">${banners()}<section class="card"><p style="margin:0 0 14px;white-space:pre-wrap">${p.bio?esc(p.bio):'<span class="mut">No bio yet.</span>'}</p>
+ <div class="stats3"><div><span class="num">${trophiesOf(S.uid).length}</span><span class="small mut">trophies</span></div><div><span class="num">${myParties().length}</span><span class="small mut">parties</span></div><div><span class="num">${s.best}</span><span class="small mut">best streak</span></div></div>
+ <div class="btns" style="margin-top:14px"><button class="btn line sm" data-act="modal" data-k="editprofile">Edit profile</button></div></section>
+ <section class="card"><h2>Trophy cabinet</h2>${trophyGrid(S.uid)}</section>
+ <section class="card"><h2>App style</h2><p class="small mut" style="margin:-4px 0 12px">Pick the look you like. Only you see your choice.</p><div class="skins">${SKINS.map(([k,n,d,c])=>`<button class="skin ${curSkin()===k?'on':''}" data-act="skin" data-k="${k}" aria-pressed="${curSkin()===k}"><span class="sw">${c.map(x=>`<i style="background:${x}"></i>`).join('')}</span><b>${n}</b><span class="small mut">${d}</span></button>`).join('')}</div></section>
+ <section class="card"><h2>My goals</h2><form data-form="goals"><div class="two"><div><label class="f" for="gb">Bedtime target</label><input id="gb" type="time" name="bed" value="${esc(g.bed)}"></div><div></div></div><div class="two"><div><label class="f" for="gs">Sleep (hours)</label><input id="gs" type="number" name="sleep" min="4" max="12" step="0.25" value="${g.sleepH}"></div><div><label class="f" for="gt">Screen time max (min)</label><input id="gt" type="number" name="screen" min="15" max="1440" step="15" value="${g.screenMin}"></div></div><div class="btns" style="margin-top:12px"><button class="btn ghost">Save goals</button></div></form>
+ <p class="small mut" style="margin:10px 0 0">Goals are personal. Party challenges use the same rules for everyone.</p></section></main>`;
+}
+function profileForm(p,first){
+ p=p||{};const av=p.avatar||AV[0];
+ return `<form data-form="profile"><label class="f">Pick an avatar</label><div class="avpick">${AV.map(a=>`<label><input type="radio" name="avatar" value="${a}" ${a===av?'checked':''}><span>${a}</span></label>`).join('')}</div>
+ <label class="f" for="pn">Display name</label><input id="pn" type="text" name="name" maxlength="30" value="${esc(p.name||'')}" required>
+ <label class="f" for="pu">Username</label><input id="pu" type="text" name="username" maxlength="20" value="${esc(p.username||'')}" placeholder="letters, numbers, _" required autocapitalize="none">
+ <label class="f" for="pb">Bio <span class="mut small">(150 characters)</span></label><textarea id="pb" name="bio" maxlength="150" placeholder="Trying to sleep before midnight. Mostly failing.">${esc(p.bio||'')}</textarea>
+ <div class="err" id="perr"></div><div class="btns" style="margin-top:16px"><button class="btn">${first?'Create my account':'Save profile'}</button>${first?'':'<button type="button" class="btn line" data-act="close">Cancel</button>'}</div></form>`;
+}
+function vOnboard(){
+ return `<header class="top"><div class="in"><h1>Welcome to Habitor</h1><p>Track habits, sleep and screen time, then challenge your friends for a monthly trophy.</p></div></header>
+ <main class="wrap lift">${banners()}<section class="card"><h2>Set up your account</h2>${profileForm(null,true)}</section></main>`;
+}
+function vModal(){
+ const M=S.modal;if(!M)return '';let body='';
+ if(M.k==='newparty')body=`<h2>Create a party</h2><p class="mut">You'll be the host and pick the monthly challenge.</p><form data-form="newparty"><label class="f" for="np">Party name</label><input id="np" type="text" name="name" maxlength="30" placeholder="Night Owls" required>
+  <label class="f">Icon</label><div class="avpick">${PE.map((e,i)=>`<label><input type="radio" name="emoji" value="${e}" ${i?'':'checked'}><span>${e}</span></label>`).join('')}</div>
+  <label class="f" for="nc">This month's challenge</label><select id="nc" name="type">${Object.entries(CH).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('')}</select>
+  <div class="btns" style="margin-top:16px"><button class="btn">Create party</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
+ if(M.k==='join')body=`<h2>Join a party</h2><p class="mut">Ask a friend for their 6-character party code.</p><form data-form="join"><label class="f" for="jc">Party code</label><input id="jc" type="text" name="code" maxlength="6" class="code" autocapitalize="characters" required><div class="err" id="jerr"></div>
+  <div class="btns" style="margin-top:16px"><button class="btn">Join</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
+ if(M.k==='editprofile')body=`<h2>Edit profile</h2>${profileForm(me(),false)}`;
+ if(M.k==='profile'){const p=S.profiles[M.uid]||{},shared=myParties().filter(x=>x.members&&x.members[M.uid]).map(x=>esc((x.emoji||'')+' '+x.name)).join(', ');
+  body=`<div style="text-align:center"><div class="av xl" style="margin:0 auto 10px;border-color:var(--co2)">${esc(p.avatar||'🙂')}</div><h2>${esc(p.name||'Friend')}</h2><p class="mut" style="margin:0">@${esc(p.username||'')}</p></div>
+  <p style="white-space:pre-wrap;text-align:center">${p.bio?esc(p.bio):'<span class="mut">No bio yet.</span>'}</p>${shared?`<p class="small mut" style="text-align:center">Parties together: ${shared}</p>`:''}
+  <h3>Trophy cabinet</h3>${trophyGrid(M.uid)}<div class="btns" style="margin-top:16px"><button class="btn line" data-act="close">Close</button></div>`}
+ return `<div class="ov" data-act="ovclose"><div class="sheet" role="dialog" aria-modal="true">${body}</div></div>`;
+}
+const curSkin=()=>priv().skin||document.documentElement.dataset.skin||'club';
+function render(){
+ if(S.priv&&S.priv.skin&&S.priv.skin!==document.documentElement.dataset.skin)applySkin(S.priv.skin);
+ if(!S.ready&&!S.slow)return;
+ let h;
+ if(!S.ready){h=`<main class="wrap">${banners()}<div class="load"><p>Loading your club…</p></div></main>`}
+ else if(!me())h=vOnboard();
+ else{h=({today:vToday,calendar:vCal,parties:vParties,profile:vProfile}[S.tab]||vToday)();
+  h+=`<nav class="tabs" aria-label="Sections"><div class="in">${[['today','Today'],['calendar','Calendar'],['parties','Parties'],['profile','Profile']].map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-k="${k}" ${S.tab===k?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>${l}</button>`).join('')}</div></nav>`}
+ $('#app').innerHTML=h;$('#modal').innerHTML=me()?vModal():'';
+}
+let deferred=false;
+function soon(){const a=document.activeElement;if(a&&a.matches&&a.matches('input[type=text],input[type=number],input[type=time],textarea')&&a.value){deferred=true;return}requestAnimationFrame(render)}
+document.addEventListener('focusout',()=>{if(deferred)setTimeout(()=>{const a=document.activeElement;if(a&&a.matches&&a.matches('input,textarea'))return;deferred=false;render()},400)});
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;
+ if(a==='ovclose'){if(e.target===b){S.modal=null;render()}return}
+ if(S.readonly&&['toggle','delhabit','pick','leave'].includes(a)){toast('Saving is off for you.');return}
+ if(a==='tab'){S.tab=b.dataset.k;S.party=null;S.edit=false;render();scrollTo(0,0)}
+ else if(a==='day'){S.day=b.dataset.k;render()}
+ else if(a==='edit'){S.edit=!S.edit;render()}
+ else if(a==='toggle'){const st=clone(priv()),k=S.day,l=st.logs[k]||[],id=b.dataset.id;st.logs[k]=l.includes(id)?l.filter(x=>x!==id):[...l,id];savePriv(st);pushDay(k)}
+ else if(a==='delhabit'){const st=clone(priv());st.habits=st.habits.filter(h=>h.id!==b.dataset.id);if(!st.habits.length)S.edit=false;savePriv(st);pushDay(todayK())}
+ else if(a==='skin'){const k=b.dataset.k;applySkin(k);const st=clone(priv());st.skin=k;if(S.readonly){render();return}savePriv(st)}
+ else if(a==='tip'){const t=b.dataset.t;S.tips={...S.tips,[t]:(S.tips[t]||0)+1};render()}
+ else if(a==='calm'){S.calM=addMonths(S.calM,+b.dataset.n);render()}
+ else if(a==='calday'){S.calSel=b.dataset.k;render()}
+ else if(a==='openparty'){S.party=b.dataset.id;render();scrollTo(0,0)}
+ else if(a==='back'){S.party=null;render()}
+ else if(a==='modal'){S.modal={k:b.dataset.k};render();setTimeout(()=>{const i=$('.sheet input[type=text]');i&&i.focus()},30)}
+ else if(a==='close'){S.modal=null;render()}
+ else if(a==='profile'){S.modal={k:'profile',uid:b.dataset.uid};render()}
+ else if(a==='copy'){const c=b.dataset.code;(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Code copied')).catch(()=>toast('Party code: '+c))}
+ else if(a==='pick'){const id=S.party,m=curM(),v={type:b.dataset.t,by:S.uid,at:Date.now()};S.parties={...S.parties,[id]:deepMerge(S.parties[id],{challenges:{[m]:v}})};render();write('parties/'+id,()=>store.merge('parties/'+id,{challenges:{[m]:v}}))}
+ else if(a==='leave'){const id=b.dataset.id,p=clone(S.parties[id]||{});delete p.members[S.uid];if(p.host===S.uid){const rest=Object.entries(p.members).sort((x,y)=>x[1]-y[1]);if(rest.length)p.host=rest[0][0]}S.parties={...S.parties,[id]:p};S.party=null;render();write('parties/'+id,()=>store.set('parties/'+id,p));toast('You left the party')}
+});
+document.addEventListener('input',e=>{if(e.target.id==='sb'||e.target.id==='sw'){const o=$('#sdur');if(o)o.textContent=fmtMin(sleepMins($('#sb').value,$('#sw').value))}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.modal){S.modal=null;render()}if((e.key==='Enter'||e.key===' ')&&e.target.matches('li[data-act]')){e.preventDefault();e.target.click()}});
+document.addEventListener('submit',e=>{
+ const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();const F=new FormData(f),t=f.dataset.form,val=n=>String(F.get(n)||'').trim();
+ if(S.readonly&&t!=='profile'){toast('Saving is off for you.');return}
+ if(t==='addhabit'){const name=val('name');if(!name)return;const st=clone(priv());st.habits.push({id:rid(),name,emoji:val('emoji')||'✓',created:Date.now()});deferred=false;savePriv(st);pushDay(todayK())}
+ else if(t==='sleep'){const bed=val('bed'),wake=val('wake'),m=sleepMins(bed,wake);if(!m||m>960){toast('Check your times: sleep must be under 16 hours');return}deferred=false;pushDay(S.day,{sleepH:Math.round(m/60*100)/100,sleepMin:m,bed,wake});toast(`Saved: ${fmtMin(m)} of sleep`)}
+ else if(t==='screen'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}deferred=false;pushDay(S.day,{screenMin:hh*60+mm,src:'manual'});toast('Screen time saved')}
+ else if(t==='goals'){const s=parseFloat(val('sleep')),sc=parseInt(val('screen'),10);if(!(s>=4&&s<=12&&sc>=15&&sc<=1440)){toast('Check your goals');return}const st=clone(priv());st.goals={sleepH:s,screenMin:sc,bed:val('bed')||'23:30'};deferred=false;savePriv(st);toast('Goals saved')}
+ else if(t==='profile'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr');
+  if(!/^[a-z0-9_]{3,20}$/.test(u)){err.textContent='Username: 3–20 letters, numbers or underscores.';return}
+  if(Object.entries(S.profiles).some(([id,p])=>id!==S.uid&&p&&p.username===u)){err.textContent='That username is taken.';return}
+  const p={...(me()||{joined:Date.now()}),name,username:u,bio,avatar};S.profiles={...S.profiles,[S.uid]:p};S.modal=null;deferred=false;render();
+  write('profiles/'+S.uid,()=>store.set('profiles/'+S.uid,p))}
+ else if(t==='newparty'){const name=val('name');if(!name)return;const id=rid(),m=curM(),p={name,emoji:val('emoji')||'🎉',code:code6(),host:S.uid,members:{[S.uid]:Date.now()},challenges:{[m]:{type:val('type')||'screen',by:S.uid,at:Date.now()}},created:Date.now()};
+  S.parties={...S.parties,[id]:p};S.modal=null;S.party=id;S.tab='parties';deferred=false;render();write('parties/'+id,()=>store.set('parties/'+id,p))}
+ else if(t==='join'){const c=val('code').toUpperCase(),hit=Object.entries(S.parties).find(([,p])=>p&&p.code===c),err=$('#jerr');
+  if(!hit){err.textContent='No party with that code. Check it and try again.';return}const [id,p]=hit;
+  if(p.members&&p.members[S.uid]){S.modal=null;S.party=id;render();return}if(Object.keys(p.members||{}).length>=20){err.textContent='That party is full (20 members).';return}
+  const at=Date.now();S.parties={...S.parties,[id]:deepMerge(p,{members:{[S.uid]:at}})};S.modal=null;S.party=id;deferred=false;render();write('parties/'+id,()=>store.merge('parties/'+id,{members:{[S.uid]:at}}));toast('Welcome to '+p.name)}
+});
+
+/* ---------- boot ---------- */
+function ready(){if(S.loaded.p&&S.loaded.v&&!S.ready){S.ready=true;render()}awardCheck();soon()}
+async function boot(){
+ const slow=setTimeout(()=>{S.slow=true;render()},10000);
+ let db=null,user=null;
+ try{if(window.claude&&typeof claude.use==='function')[db,user]=await Promise.all([claude.use('db'),claude.use('user')])}catch(e){}
+ let uid=null;if(db&&user){try{uid=await user.id()}catch(e){}}
+ if(db&&uid){store=makeRemote(db);S.uid=uid}else{store=makeLocal();S.uid='me';S.local=true}
+ const err=n=>e=>{if(!S.err[n]){S.err[n]=1;toast(e&&e.code==='revoked'?'Access to live data ended.':"Live data couldn't load. Reopen the app to retry.")}};
+ const fill=docs=>Object.fromEntries(docs.filter(d=>d.data).map(d=>[d.id,d.data]));
+ store.subCol('profiles',d=>{S.profiles=fill(d);S.loaded.p=true;clearTimeout(slow);ready()},err('p'));
+ store.subCol('stats',d=>{S.stats=fill(d);ready()},err('s'));
+ store.subCol('parties',d=>{S.parties=fill(d);ready()},err('pa'));
+ store.subCol('trophies',d=>{S.trophies=fill(d);ready()},err('t'));
+ store.subDoc(`data/users/${S.uid}/state`,v=>{const n=v?{habits:[],logs:{},goals:{},...clone(v)}:null;if(S.privPending)S.lastPriv=n;else S.priv=n;S.loaded.v=true;ready()},err('v'));
+}
+boot();
+}
+</script>
+</body>
+</html>

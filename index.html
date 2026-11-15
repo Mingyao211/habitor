@@ -436,7 +436,8 @@ function profileForm(p,first,isNew){
 }
 function vOnboard(){
  return `<header class="top"><div class="in"><h1>Welcome to Habitor</h1><p>Track habits, sleep and screen time, then challenge your friends for a monthly trophy.</p></div></header>
- <main class="wrap lift">${banners()}<section class="card"><h2>Set up your account</h2>${profileForm(null,true)}</section></main>`;
+ <main class="wrap lift">${banners()}<section class="card"><h2>Already have an account?</h2><p class="mut" style="margin:-4px 0 12px">Log in with your username and password to use it on this device.</p><button class="btn" data-act="loginexisting" style="width:100%">Log in</button></section>
+ <section class="card"><h2>New here? Create an account</h2>${profileForm(null,true)}</section></main>`;
 }
 function vModal(){
  const M=S.modal;if(!M)return '';let body='';
@@ -447,7 +448,7 @@ function vModal(){
  if(M.k==='join')body=`<h2>Join a party</h2><p class="mut">Ask a friend for their 6-character party code.</p><form data-form="join"><label class="f" for="jc">Party code</label><input id="jc" type="text" name="code" maxlength="6" class="code" autocapitalize="characters" required><div class="err" id="jerr"></div>
   <div class="btns" style="margin-top:16px"><button class="btn">Join</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
  if(M.k==='logout')body=`<h2>Log out of Habitor?</h2><p class="mut">Your habits, parties and trophies stay saved. Log back in any time to pick up where you left off.</p><div class="btns" style="margin-top:16px"><button class="btn danger" data-act="dologout">Log out</button><button class="btn ghost" data-act="other">Use another account</button><button class="btn line" data-act="close">Cancel</button></div>`;
- if(M.k==='other')body=otherModal();
+ if(M.k==='other')body=otherModal(M.login);
  if(M.k==='hremind'){const logs=priv().logs[todayK()]||[],hs=priv().habits.filter(h=>M.ids.includes(h.id));body=`<div style="text-align:center"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="var(--co)" stroke-width="2"/><path d="M12 9v4l2.5 2M4 5l3-2M20 5l-3-2" fill="none" stroke="var(--co)" stroke-width="2" stroke-linecap="round"/></svg><h2 style="margin-top:6px">Habit time</h2></div>${hs.map(h=>{const on=logs.includes(h.id);return `<div class="card row" style="margin:10px 0"><div class="emo">${esc(h.emoji||'•')}</div><div class="sp"><b style="font-size:18px">${esc(h.name)}</b><br><span class="mut small">Planned for ${esc(clock12(h.time))}</span></div>${on?'<span class="small" style="color:var(--ok);font-weight:700">Done</span>':`<button class="btn sm" data-act="hdone" data-id="${h.id}">Mark done</button>`}</div>`}).join('')}<div class="btns"><button class="btn line" data-act="close">Got it</button><button class="btn line" data-act="hsnooze">Remind me in 10 minutes</button></div>`}
  if(M.k==='remind'){const now=Date.now();body=`<div style="text-align:center"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="var(--co)" stroke-width="2"/><path d="M12 9v4l2.5 2M4 5l3-2M20 5l-3-2" fill="none" stroke="var(--co)" stroke-width="2" stroke-linecap="round"/></svg><h2 style="margin-top:6px">Reminder</h2></div>${M.list.map(e=>`<div class="card" style="margin:10px 0"><b style="font-size:18px">${esc(e.title)}</b><br><span class="mut">${evTs(e)<now-3600000?'Was ':''}${esc(dLabel(e.date))} at ${esc(clock12(e.time))}</span></div>`).join('')}<div class="btns"><button class="btn" data-act="close">Got it</button><button class="btn line" data-act="snooze">Remind me in 10 minutes</button></div>`}
  if(M.k==='newacct')body=`<h2>Create a new account</h2><p class="mut">Pick a username nobody else has. You'll need the password to log in on other devices.</p>${profileForm(null,true,true)}`;
@@ -664,11 +665,11 @@ function vOut(){const list=[];
  return `<main class="wrap" style="padding-top:48px"><div style="text-align:center"><div class="num" style="font-size:40px;color:var(--co-ink)">Habitor</div><p class="mut" style="margin:6px 0 22px">You're logged out. Choose an account.</p></div>
  <section class="card"><h2>Accounts on this device</h2>${list.length?list.join(''):'<div class="empty">No saved accounts yet.</div>'}</section>
  <button class="btn" data-act="other" style="width:100%">Use another account</button></main>`}
-function otherModal(){return `<h2>Use another account</h2><p class="mut">Log in with a username and password, or create a new account.</p>
+function otherModal(login){return `<h2>${login?'Log in':'Use another account'}</h2><p class="mut">${login?'Enter the username and password of your Habitor account.':'Log in with a username and password, or create a new account.'}</p>
  <form data-form="login"><label class="f" for="lu">Username</label><input id="lu" type="text" name="u" required autocapitalize="none" autocomplete="username" placeholder="@username">
  <label class="f" for="lp">Password</label><input id="lp" type="password" name="pw" required autocomplete="current-password"><div class="err" id="lerr"></div>
  <div class="btns" style="margin-top:14px"><button class="btn">Log in</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>
- <hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><p style="margin:0 0 10px;font-weight:600">New to Habitor?</p><button class="btn ghost" data-act="newacct" style="width:100%">Create a new account</button>`}
+ ${login?'<p class="small mut" style="margin:14px 0 0">No password yet? Open Habitor on the device where you made the account and set one in Profile › Edit profile.</p>':'<hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><p style="margin:0 0 10px;font-weight:600">New to Habitor?</p><button class="btn ghost" data-act="newacct" style="width:100%">Create a new account</button>'}`}
 
 /* ---------- reminders ---------- */
 const evs=()=>Array.isArray(priv().events)?priv().events:[];
@@ -735,6 +736,7 @@ document.addEventListener('click',e=>{
  else if(a==='logout'){S.modal={k:'logout'};render()}
  else if(a==='dologout'){S.out=true;S.modal=null;S.game=null;S.party=null;S.tab='today';try{localStorage.setItem('habitor-signed-out','1')}catch(e){}render();scrollTo(0,0)}
  else if(a==='other'){if(!S.out){S.out=true;S.game=null;try{localStorage.setItem('habitor-signed-out','1')}catch(e){}}S.modal={k:'other'};render();setTimeout(()=>{const i=$('#lu');i&&i.focus()},30)}
+ else if(a==='loginexisting'){S.modal={k:'other',login:true};render();setTimeout(()=>{const i=$('#lu');i&&i.focus()},30)}
  else if(a==='newacct'){S.modal={k:'newacct'};render()}
  else if(a==='swacct'){const id=b.dataset.id;switchTo(id,true)}
  else if(a==='forget'){LS.set('habitor-saved',savedAccts().filter(x=>x!==b.dataset.id));if(getActive()===b.dataset.id)setActive(S.cuid,true);toast('Removed from this device');render()}

@@ -108,8 +108,30 @@ label.f{display:block;font-size:14px;font-weight:600;margin:12px 0 6px}
 .skin{display:flex;flex-direction:column;gap:8px;align-items:flex-start;border:2px solid var(--line);border-radius:16px;padding:12px;background:transparent;text-align:left;min-height:44px}
 .skin.on{border-color:var(--co);background:var(--co2)}
 .skin .sw{display:flex;gap:4px}.skin .sw i{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.15)}
+.board{display:grid;width:100%;max-width:460px;margin:0 auto;border-radius:12px;overflow:hidden;border:var(--bw) solid var(--line)}
+.b8{grid-template-columns:repeat(8,minmax(0,1fr))}
+.sq{aspect-ratio:1;border:0;padding:0;display:grid;place-items:center;position:relative;line-height:1}
+.sq.l{background:color-mix(in srgb,var(--co2) 75%,var(--card))}.sq.d{background:color-mix(in srgb,var(--co) 55%,var(--card))}
+.sq.last{box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--gold) 28%,transparent)}
+.sq.sel{box-shadow:inset 0 0 0 4px var(--gold)}
+.sq.dot::after{content:"";width:28%;height:28%;border-radius:50%;background:color-mix(in srgb,var(--ink) 35%,transparent);position:absolute}
+.sq.cap{box-shadow:inset 0 0 0 4px color-mix(in srgb,var(--ink) 45%,transparent)}
+.pc{font-size:clamp(24px,8.4vw,42px);font-family:"Segoe UI Symbol","Noto Sans Symbols 2","DejaVu Sans",serif}
+.pc.w{color:#fff;text-shadow:0 0 1px #000,0 0 2px #000,0 1px 2px #000}.pc.b{color:#141414;text-shadow:0 0 2px rgba(255,255,255,.7)}
+.ck{width:74%;height:74%;border-radius:50%;display:grid;place-items:center;font-size:clamp(14px,4.4vw,22px);font-family:"Segoe UI Symbol","DejaVu Sans",serif}
+.ck.w{background:#f7f3ea;color:#8a5d00;box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 1px 2px rgba(0,0,0,.4)}
+.ck.b{background:#1d1d24;color:#ffbf1f;box-shadow:inset 0 -4px 0 rgba(255,255,255,.12),0 1px 2px rgba(0,0,0,.4)}
+.c4{grid-template-columns:repeat(7,minmax(0,1fr));background:var(--co);padding:6px;gap:4px;border-radius:16px}
+.hole{aspect-ratio:1;border:0;padding:3px;background:transparent;display:grid;place-items:center}
+.disc{width:100%;height:100%;border-radius:50%;background:var(--bg)}.disc.r{background:#e8304b}.disc.y{background:#ffc21a}.disc.win{outline:4px solid var(--card);outline-offset:-4px}
+.t3{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;border:0;max-width:340px}
+.tcell{aspect-ratio:1;border:var(--bw) solid var(--line);border-radius:16px;background:var(--card);font:800 clamp(40px,14vw,64px)/1 var(--fd);color:var(--co-ink)}
+.tcell.win{background:var(--co2)}
+.mem{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;border:0;max-width:380px}
+.card2{aspect-ratio:1;border:0;border-radius:14px;background:var(--co);color:var(--co);font-size:clamp(28px,9vw,40px);font-family:"Segoe UI Symbol","DejaVu Sans",serif}
+.card2.up{background:var(--card);color:var(--ink);border:2px solid var(--co)}.card2.done{background:var(--co2);border-color:var(--co2);color:var(--co-ink)}
 .tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
-.tabs .in{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;max-width:520px}
+.tabs .in{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;max-width:520px}
 .tabs button{border:0;background:transparent;padding:10px 4px 12px;min-height:64px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--mut)}
 .tabs button.on{color:var(--co-ink);font-weight:700}
 .tabs svg{width:24px;height:24px}
@@ -184,7 +206,7 @@ const SKEY='streak-party-skin';
 function applySkin(k){if(!SKINS.some(x=>x[0]===k))k='club';document.documentElement.dataset.skin=k;try{localStorage.setItem(SKEY,k)}catch(e){}}
 try{applySkin(localStorage.getItem(SKEY)||'club')}catch(e){applySkin('club')}
 
-const S={tips:{},ready:false,local:false,uid:null,tab:'today',day:todayK(),calM:curM(),calSel:todayK(),party:null,modal:null,edit:false,
+const S={game:null,tips:{},ready:false,local:false,uid:null,tab:'today',day:todayK(),calM:curM(),calSel:todayK(),party:null,modal:null,edit:false,
  profiles:{},stats:{},parties:{},trophies:{},priv:null,privPending:0,lastPriv:undefined,loaded:{p:false,v:false},slow:false,readonly:false,err:{}};
 
 /* ---------- storage: shared db when available, this browser otherwise ---------- */
@@ -278,6 +300,7 @@ const cup=(s=56)=>`<svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidd
 const ICON={today:'<path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
  calendar:'<rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
  parties:'<circle cx="8" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16.5" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 19c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5M11 19c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+ games:'<rect x="2.5" y="7" width="19" height="11" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 10.5v4M5 12.5h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="15.5" cy="11" r="1.3" fill="currentColor"/><circle cx="18" cy="14" r="1.3" fill="currentColor"/>',
  profile:'<path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5M12 14v4M8 20h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'};
 const check='<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const nameOf=uid=>{const p=S.profiles[uid];return p?(p.name||p.username||'Friend'):'Friend'};
@@ -399,6 +422,136 @@ function vModal(){
   <h3>Trophy cabinet</h3>${trophyGrid(M.uid)}<div class="btns" style="margin-top:16px"><button class="btn line" data-act="close">Close</button></div>`}
  return `<div class="ov" data-act="ovclose"><div class="sheet" role="dialog" aria-modal="true">${body}</div></div>`;
 }
+/* ---------- mini games ---------- */
+const GAMES=[['chess','Chess','Classic chess. Checkmate the king.',1],['checkers','Checkers','Jump and capture every piece. Captures are compulsory.',1],['c4','Connect Four','Drop discs and line up four in a row.',1],['ttt','Tic-tac-toe','Three in a row. Quick to play.',1],['memory','Memory match','Find all 8 pairs in as few tries as you can.',0]];
+const onB=(r,c)=>r>=0&&r<8&&c>=0&&c<8;
+let gid=0;
+/* chess */
+const KN=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]],KG=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]],RD=[[1,0],[-1,0],[0,1],[0,-1]],BD=[[1,1],[1,-1],[-1,1],[-1,-1]];
+const GLYPH={K:'♚',Q:'♛',R:'♜',B:'♝',N:'♞',P:'♟'};
+function chessNew(mode){const init='rnbqkbnrpppppppp'+' '.repeat(32)+'PPPPPPPPRNBQKBNR';return{kind:'chess',mode,id:++gid,b:[...init].map(ch=>ch===' '?null:(ch===ch.toUpperCase()?'w':'b')+ch.toUpperCase()),turn:'w',cs:{wK:1,wQ:1,bK:1,bQ:1},ep:null,sel:null,last:null,over:null}}
+function attacked(b,sq,by){const r=sq>>3,c=sq&7,pr=by==='w'?r+1:r-1;
+ for(const dc of[-1,1])if(onB(pr,c+dc)&&b[pr*8+c+dc]===by+'P')return true;
+ for(const[dr,dc]of KN)if(onB(r+dr,c+dc)&&b[(r+dr)*8+c+dc]===by+'N')return true;
+ for(const[dr,dc]of KG)if(onB(r+dr,c+dc)&&b[(r+dr)*8+c+dc]===by+'K')return true;
+ for(const[ds,kinds]of[[RD,'RQ'],[BD,'BQ']])for(const[dr,dc]of ds){let rr=r+dr,cc=c+dc;while(onB(rr,cc)){const p=b[rr*8+cc];if(p){if(p[0]===by&&kinds.includes(p[1]))return true;break}rr+=dr;cc+=dc}}
+ return false}
+function chessPseudo(s,col){const b=s.b,ms=[],opp=col==='w'?'b':'w';
+ for(let i=0;i<64;i++){const p=b[i];if(!p||p[0]!==col)continue;const r=i>>3,c=i&7,t=p[1],add=(to,x)=>ms.push({f:i,t:to,...(x||{})});
+  if(t==='P'){const d=col==='w'?-1:1,start=col==='w'?6:1,r1=r+d;
+   if(onB(r1,c)&&!b[r1*8+c]){add(r1*8+c);if(r===start&&!b[(r+2*d)*8+c])add((r+2*d)*8+c,{dbl:1})}
+   for(const dc of[-1,1]){const cc=c+dc;if(!onB(r1,cc))continue;const to=r1*8+cc;if(b[to]&&b[to][0]===opp)add(to);else if(s.ep===to)add(to,{ep:1})}}
+  else if(t==='N'||t==='K'){for(const[dr,dc]of t==='N'?KN:KG){const rr=r+dr,cc=c+dc;if(onB(rr,cc)&&(!b[rr*8+cc]||b[rr*8+cc][0]===opp))add(rr*8+cc)}
+   if(t==='K'&&i===(col==='w'?60:4)&&!attacked(b,i,opp)){
+    if(s.cs[col+'K']&&!b[i+1]&&!b[i+2]&&b[i+3]===col+'R'&&!attacked(b,i+1,opp)&&!attacked(b,i+2,opp))add(i+2,{castle:'K'});
+    if(s.cs[col+'Q']&&!b[i-1]&&!b[i-2]&&!b[i-3]&&b[i-4]===col+'R'&&!attacked(b,i-1,opp)&&!attacked(b,i-2,opp))add(i-2,{castle:'Q'})}}
+  else{for(const[dr,dc]of t==='R'?RD:t==='B'?BD:[...RD,...BD]){let rr=r+dr,cc=c+dc;while(onB(rr,cc)){const q=b[rr*8+cc];if(!q)add(rr*8+cc);else{if(q[0]===opp)add(rr*8+cc);break}rr+=dr;cc+=dc}}}}
+ return ms}
+function chessApply(s,m){const b=s.b.slice(),p=b[m.f],col=p[0];b[m.t]=p;b[m.f]=null;
+ if(m.ep)b[m.t+(col==='w'?8:-8)]=null;
+ if(p[1]==='P'&&(m.t<8||m.t>=56))b[m.t]=col+'Q';
+ if(m.castle==='K'){b[m.f+1]=b[m.f+3];b[m.f+3]=null}if(m.castle==='Q'){b[m.f-1]=b[m.f-4];b[m.f-4]=null}
+ const cs={...s.cs};if(p[1]==='K'){cs[col+'K']=0;cs[col+'Q']=0}
+ for(const[sq,k]of[[63,'wK'],[56,'wQ'],[7,'bK'],[0,'bQ']])if(m.f===sq||m.t===sq)cs[k]=0;
+ return{...s,b,cs,turn:col==='w'?'b':'w',ep:m.dbl?(m.f+m.t)/2:null,sel:null,last:[m.f,m.t]}}
+function chessLegal(s){const col=s.turn,opp=col==='w'?'b':'w';return chessPseudo(s,col).filter(m=>{const n=chessApply(s,m);return !attacked(n.b,n.b.indexOf(col+'K'),opp)})}
+const inCheck=s=>attacked(s.b,s.b.indexOf(s.turn+'K'),s.turn==='w'?'b':'w');
+const VAL={P:1,N:3,B:3.2,R:5,Q:9,K:0};
+function chessEval(b,col){let v=0;b.forEach((p,i)=>{if(!p)return;const r=i>>3,c=i&7,cen=((3.5-Math.abs(3.5-c))+(3.5-Math.abs(3.5-r)))*0.03;const x=VAL[p[1]]+(p[1]==='P'||p[1]==='N'?cen:0);v+=p[0]===col?x:-x});return v}
+function chessAI(s){const col=s.turn;let best=null,bv=-1e9;
+ for(const m of chessLegal(s)){const n=chessApply(s,m),rep=chessLegal(n);let v;
+  if(!rep.length)v=inCheck(n)?1e6:-2;else{v=1e9;for(const r of rep){const e=chessEval(chessApply(n,r).b,col);if(e<v)v=e}}
+  v+=Math.random()*0.2;if(v>bv){bv=v;best=m}}
+ return best}
+/* checkers */
+function ckNew(mode){const b=Array(64).fill(null);for(let i=0;i<64;i++){const r=i>>3,c=i&7;if((r+c)%2){if(r<3)b[i]='b';if(r>4)b[i]='w'}}return{kind:'checkers',mode,id:++gid,b,turn:'w',sel:null,chain:null,last:null,over:null}}
+function ckMoves(s,col){const b=s.b,caps=[],steps=[];
+ for(let i=0;i<64;i++){const p=b[i];if(!p||p.toLowerCase()!==col)continue;if(s.chain!=null&&i!==s.chain)continue;const r=i>>3,c=i&7,king=p!==p.toLowerCase();
+  for(const[dr,dc]of king?BD:col==='w'?[[-1,-1],[-1,1]]:[[1,-1],[1,1]]){const r1=r+dr,c1=c+dc,r2=r+2*dr,c2=c+2*dc;if(!onB(r1,c1))continue;const q=b[r1*8+c1];
+   if(!q)steps.push({f:i,t:r1*8+c1});else if(q.toLowerCase()!==col&&onB(r2,c2)&&!b[r2*8+c2])caps.push({f:i,t:r2*8+c2,x:r1*8+c1})}}
+ return caps.length?caps:(s.chain!=null?[]:steps)}
+function ckApply(s,m){const b=s.b.slice();let p=b[m.f],crowned=false;b[m.f]=null;
+ if((p==='w'&&m.t<8)||(p==='b'&&m.t>=56)){p=p.toUpperCase();crowned=true}b[m.t]=p;
+ if(m.x!=null){b[m.x]=null;const n={...s,b,chain:m.t,last:[m.f,m.t]};if(!crowned&&ckMoves(n,p.toLowerCase()).some(k=>k.x!=null))return{...n,sel:m.t}}
+ return{...s,b,chain:null,sel:null,turn:s.turn==='w'?'b':'w',last:[m.f,m.t]}}
+function ckAI(s){let best=null,bv=-1e9;for(const m of ckMoves(s,s.turn)){let v=Math.random();if(m.x!=null)v+=10;if(s.b[m.f]==='b'&&m.t>=56)v+=5;
+ const n=ckApply(s,m);if(n.turn!==s.turn&&ckMoves(n,n.turn).some(o=>o.x===m.t))v-=4;if(v>bv){bv=v;best=m}}return best}
+/* connect four (7 x 6) */
+const c4New=mode=>({kind:'c4',mode,id:++gid,b:Array(42).fill(null),turn:'r',over:null,win:[],last:null});
+function c4Drop(b,c){for(let r=5;r>=0;r--)if(!b[r*7+c])return r*7+c;return -1}
+function c4Line(b){for(let i=0;i<42;i++){const p=b[i];if(!p)continue;const r=Math.floor(i/7),c=i%7;
+ for(const[dr,dc]of[[0,1],[1,0],[1,1],[1,-1]]){const cells=[i];for(let k=1;k<4;k++){const rr=r+dr*k,cc=c+dc*k;if(rr<0||rr>5||cc<0||cc>6||b[rr*7+cc]!==p)break;cells.push(rr*7+cc)}if(cells.length===4)return cells}}return null}
+function c4AI(s){const me=s.turn,op=me==='r'?'y':'r',cols=[3,2,4,1,5,0,6].filter(c=>c4Drop(s.b,c)>=0);
+ const winsWith=(b,c,p)=>{const i=c4Drop(b,c);if(i<0)return false;const n=b.slice();n[i]=p;return !!c4Line(n)};
+ for(const c of cols)if(winsWith(s.b,c,me))return c;for(const c of cols)if(winsWith(s.b,c,op))return c;
+ const safe=cols.filter(c=>{const n=s.b.slice();n[c4Drop(n,c)]=me;return !winsWith(n,c,op)});const pool=safe.length?safe:cols;
+ return Math.random()<0.75?pool[0]:pool[Math.floor(Math.random()*pool.length)]}
+/* tic-tac-toe */
+const tttNew=mode=>({kind:'ttt',mode,id:++gid,b:Array(9).fill(null),turn:'X',over:null,win:[]});
+const TL=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const tttLine=b=>TL.find(l=>b[l[0]]&&b[l[0]]===b[l[1]]&&b[l[0]]===b[l[2]])||null;
+function tttMini(b,p){const l=tttLine(b);if(l)return{s:b[l[0]]==='O'?1:-1};const free=b.map((v,i)=>v?null:i).filter(i=>i!=null);if(!free.length)return{s:0};
+ let best={s:p==='O'?-2:2};for(const i of free){const n=b.slice();n[i]=p;const r=tttMini(n,p==='O'?'X':'O');if(p==='O'?r.s>best.s:r.s<best.s)best={s:r.s,i}}return best}
+function tttAI(s){const free=s.b.map((v,i)=>v?null:i).filter(i=>i!=null);return Math.random()<0.15?free[Math.floor(Math.random()*free.length)]:tttMini(s.b,'O').i}
+/* memory */
+function memNew(){const sy=['★','●','▲','■','◆','♥','♣','♠'],d=[...sy,...sy];for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]]}
+ return{kind:'memory',mode:'solo',id:++gid,cards:d.map(s=>({s,up:false,done:false})),open:[],tries:0,over:null,lock:false}}
+/* game flow */
+const NEW={chess:chessNew,checkers:ckNew,c4:c4New,ttt:tttNew,memory:memNew};
+const aiTurn=s=>s.mode==='ai'&&!s.over&&((s.kind==='chess'||s.kind==='checkers')?s.turn==='b':s.kind==='c4'?s.turn==='y':s.kind==='ttt'?s.turn==='O':false);
+function gameStatus(s){
+ if(s.kind==='chess'){if(chessLegal(s).length)return null;return inCheck(s)?(s.turn==='w'?'Black':'White')+' wins by checkmate':'Stalemate, it’s a draw'}
+ if(s.kind==='checkers'){if(ckMoves(s,s.turn).length)return null;return(s.turn==='w'?'Black':'White')+' wins'}
+ if(s.kind==='c4'){if(s.win.length)return(s.turn==='r'?'Yellow':'Red')+' wins';return s.b.every(Boolean)?'Board full, it’s a draw':null}
+ if(s.kind==='ttt'){if(s.win.length)return(s.turn==='X'?'O':'X')+' wins';return s.b.every(Boolean)?'It’s a draw':null}
+ return null}
+function afterMove(){const s=S.game;s.over=gameStatus(s);render();if(aiTurn(s)){const id=s.id;setTimeout(()=>{if(!S.game||S.game.id!==id)return;aiStep()},420)}}
+function aiStep(){const s=S.game;
+ if(s.kind==='chess'){const m=chessAI(s);if(m)S.game=chessApply(s,m)}
+ else if(s.kind==='checkers'){const m=ckAI(s);if(m)S.game=ckApply(s,m)}
+ else if(s.kind==='c4')c4Play(c4AI(s));
+ else if(s.kind==='ttt')tttPlay(tttAI(s));
+ if(S.game.kind==='chess'||S.game.kind==='checkers')afterMove()}
+function c4Play(c){const s=S.game,i=c4Drop(s.b,c);if(i<0)return;const b=s.b.slice();b[i]=s.turn;S.game={...s,b,last:i,win:c4Line(b)||[],turn:s.turn==='r'?'y':'r'};afterMove()}
+function tttPlay(i){const s=S.game;if(s.b[i])return;const b=s.b.slice();b[i]=s.turn;S.game={...s,b,win:tttLine(b)||[],turn:s.turn==='X'?'O':'X'};afterMove()}
+function gameClick(el){const s=S.game;if(!s||s.over)return;if(aiTurn(s))return;
+ if(s.kind==='chess'){const i=+el.dataset.i,p=s.b[i];if(s.sel!=null){const m=chessLegal(s).find(m=>m.f===s.sel&&m.t===i);if(m){S.game=chessApply(s,m);afterMove();return}}S.game={...s,sel:p&&p[0]===s.turn?i:null};render()}
+ else if(s.kind==='checkers'){const i=+el.dataset.i,ms=ckMoves(s,s.turn);if(s.sel!=null){const m=ms.find(m=>m.f===s.sel&&m.t===i);if(m){S.game=ckApply(s,m);afterMove();return}}if(s.chain!=null)return;
+  const own=s.b[i]&&s.b[i].toLowerCase()===s.turn;if(own&&!ms.some(m=>m.f===i)&&ms.some(m=>m.x!=null))toast('You have to capture when you can');S.game={...s,sel:ms.some(m=>m.f===i)?i:null};render()}
+ else if(s.kind==='c4')c4Play(+el.dataset.c);
+ else if(s.kind==='ttt')tttPlay(+el.dataset.i);
+ else if(s.kind==='memory'){const i=+el.dataset.i,c=s.cards[i];if(s.lock||c.up||c.done)return;const cards=s.cards.map(x=>({...x}));cards[i].up=true;const open=[...s.open,i];
+  if(open.length===2){const[a,b]=open,tries=s.tries+1;if(cards[a].s===cards[b].s){cards[a].done=cards[b].done=true;const over=cards.every(x=>x.done)?`All pairs found in ${tries} tries`:null;S.game={...s,cards,open:[],tries,over};render()}
+   else{const id=s.id;S.game={...s,cards,open,tries,lock:true};render();setTimeout(()=>{if(!S.game||S.game.id!==id)return;S.game={...S.game,cards:S.game.cards.map((x,k)=>open.includes(k)?{...x,up:false}:x),open:[],lock:false};render()},750)}}
+  else{S.game={...s,cards,open};render()}}}
+function gameLine(s){
+ if(s.over)return s.over;const two=s.mode==='2p';
+ if(s.kind==='chess')return(s.mode==='ai'?(s.turn==='w'?'Your move (White)':'Computer is thinking…'):(s.turn==='w'?'White to move':'Black to move'))+(inCheck(s)?' · Check!':'');
+ if(s.kind==='checkers')return s.chain!=null?'Keep jumping!':s.mode==='ai'?(s.turn==='w'?'Your move (White)':'Computer is thinking…'):(s.turn==='w'?'White to move':'Black to move');
+ if(s.kind==='c4')return s.mode==='ai'?(s.turn==='r'?'Your turn (Red)':'Computer is thinking…'):(s.turn==='r'?'Red to play':'Yellow to play');
+ if(s.kind==='ttt')return s.mode==='ai'?(s.turn==='X'?'Your turn (X)':'Computer is thinking…'):(s.turn+' to play');
+ return `Tries: ${s.tries}`}
+function boardHTML(s){
+ if(s.kind==='chess'||s.kind==='checkers'){const targets=new Set();
+  if(s.sel!=null)(s.kind==='chess'?chessLegal(s):ckMoves(s,s.turn)).filter(m=>m.f===s.sel).forEach(m=>targets.add(m.t));
+  let h='<div class="board b8">';for(let i=0;i<64;i++){const r=i>>3,c=i&7,dark=(r+c)%2,p=s.b[i],cls=['sq',dark?'d':'l',s.sel===i?'sel':'',s.last&&s.last.includes(i)?'last':'',targets.has(i)?(p?'cap':'dot'):''].join(' ');
+   let inner='';if(p&&s.kind==='chess')inner=`<span class="pc ${p[0]}">${GLYPH[p[1]]}︎</span>`;
+   if(p&&s.kind==='checkers')inner=`<span class="ck ${p.toLowerCase()}">${p!==p.toLowerCase()?'♛︎':''}</span>`;
+   h+=`<button class="${cls}" data-act="gsq" data-i="${i}" aria-label="Square ${'abcdefgh'[c]}${8-r}">${inner}</button>`}return h+'</div>'}
+ if(s.kind==='c4'){let h='<div class="board c4">';for(let i=0;i<42;i++){const p=s.b[i];h+=`<button class="hole" data-act="gsq" data-c="${i%7}" aria-label="Column ${i%7+1}"><span class="disc ${p||''} ${s.win.includes(i)?'win':''}"></span></button>`}return h+'</div>'}
+ if(s.kind==='ttt')return '<div class="board t3">'+s.b.map((v,i)=>`<button class="tcell ${s.win.includes(i)?'win':''}" data-act="gsq" data-i="${i}" aria-label="Cell ${i+1}">${v||''}</button>`).join('')+'</div>';
+ return '<div class="board mem">'+s.cards.map((c,i)=>`<button class="card2 ${c.up||c.done?'up':''} ${c.done?'done':''}" data-act="gsq" data-i="${i}" aria-label="Card ${i+1}">${c.up||c.done?c.s:''}</button>`).join('')+'</div>';
+}
+function vGames(){
+ if(S.game){const s=S.game,g=GAMES.find(x=>x[0]===s.kind);
+  return `<header class="top"><div class="in"><button class="chip" data-act="gquit" style="margin-bottom:12px">‹ All games</button><h1>${g[1]}</h1><p>${s.mode==='ai'?'You vs computer':s.mode==='2p'?'2 players, pass the phone':'Solo'}</p></div></header>
+  <main class="wrap lift"><section class="card"><p class="gline" role="status" style="margin:0 0 12px;font-weight:700;font-size:18px">${esc(gameLine(s))}</p>${boardHTML(s)}
+  <div class="btns" style="margin-top:14px"><button class="btn" data-act="grestart">New game</button><button class="btn line" data-act="gquit">Exit</button></div></section></main>`}
+ return `<header class="top"><div class="in"><h1>Games</h1><p>Quick games for a break. Play the computer or pass the phone to a friend.</p></div></header>
+ <main class="wrap lift">${GAMES.map(([k,n,d,two])=>`<section class="card"><h2>${n}</h2><p class="mut" style="margin:-4px 0 12px">${d}</p><div class="btns"><button class="btn sm" data-act="gstart" data-g="${k}" data-m="${two?'ai':'solo'}">${two?'Play the computer':'Play'}</button>${two?`<button class="btn ghost sm" data-act="gstart" data-g="${k}" data-m="2p">2 players</button>`:''}</div></section>`).join('')}
+ <p class="small mut" style="text-align:center">Games count as screen time too. Play a round, then put the phone down.</p></main>`;
+}
+
 const curSkin=()=>priv().skin||document.documentElement.dataset.skin||'club';
 function render(){
  if(S.priv&&S.priv.skin&&S.priv.skin!==document.documentElement.dataset.skin)applySkin(S.priv.skin);
@@ -406,8 +559,8 @@ function render(){
  let h;
  if(!S.ready){h=`<main class="wrap">${banners()}<div class="load"><p>Loading your club…</p></div></main>`}
  else if(!me())h=vOnboard();
- else{h=({today:vToday,calendar:vCal,parties:vParties,profile:vProfile}[S.tab]||vToday)();
-  h+=`<nav class="tabs" aria-label="Sections"><div class="in">${[['today','Today'],['calendar','Calendar'],['parties','Parties'],['profile','Profile']].map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-k="${k}" ${S.tab===k?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>${l}</button>`).join('')}</div></nav>`}
+ else{h=({today:vToday,calendar:vCal,parties:vParties,games:vGames,profile:vProfile}[S.tab]||vToday)();
+  h+=`<nav class="tabs" aria-label="Sections"><div class="in">${[['today','Today'],['calendar','Calendar'],['parties','Parties'],['games','Games'],['profile','Profile']].map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-k="${k}" ${S.tab===k?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>${l}</button>`).join('')}</div></nav>`}
  $('#app').innerHTML=h;$('#modal').innerHTML=me()?vModal():'';
 }
 let deferred=false;
@@ -426,6 +579,10 @@ document.addEventListener('click',e=>{
  else if(a==='delhabit'){const st=clone(priv());st.habits=st.habits.filter(h=>h.id!==b.dataset.id);if(!st.habits.length)S.edit=false;savePriv(st);pushDay(todayK())}
  else if(a==='skin'){const k=b.dataset.k;applySkin(k);const st=clone(priv());st.skin=k;if(S.readonly){render();return}savePriv(st)}
  else if(a==='tip'){const t=b.dataset.t;S.tips={...S.tips,[t]:(S.tips[t]||0)+1};render()}
+ else if(a==='gstart'){S.game=NEW[b.dataset.g](b.dataset.m);render();scrollTo(0,0)}
+ else if(a==='grestart'){const s=S.game;S.game=NEW[s.kind](s.mode);render()}
+ else if(a==='gquit'){S.game=null;render()}
+ else if(a==='gsq')gameClick(b)
  else if(a==='calm'){S.calM=addMonths(S.calM,+b.dataset.n);render()}
  else if(a==='calday'){S.calSel=b.dataset.k;render()}
  else if(a==='openparty'){S.party=b.dataset.id;render();scrollTo(0,0)}

@@ -362,16 +362,16 @@ function vCal(){
  const m=S.calM,days=myDays(),g=goals(),first=parseK(m+'-01'),lead=(first.getDay()+6)%7,t=todayK();
  let cells=['M','T','W','T','F','S','S'].map(x=>`<div class="h">${x}</div>`).join('')+'<div></div>'.repeat(lead);
  for(const k of monthDays(m)){const d=days[k]||{},a=d.total?Math.min(1,d.done/d.total):0,fut=k>t;
-  const dots=(num(d.sleepH)&&d.sleepH>=g.sleepH?'<i style="background:var(--ind)"></i>':'')+(num(d.screenMin)&&d.screenMin<=g.screenMin?'<i style="background:var(--cor)"></i>':'');
-  cells+=`<button class="cell ${a>.55?'hi':''} ${k===S.calSel?'sel':''} ${fut?'fut':''}" style="--a:${(a*.9).toFixed(2)}" data-act="calday" data-k="${k}" ${fut?'disabled':''} aria-label="${esc(dLabel(k))}"><span>${+k.slice(8)}</span><span class="dots">${dots}</span></button>`}
+  const dots=(num(d.sleepH)&&d.sleepH>=g.sleepH?'<i style="background:var(--ind)"></i>':'')+(num(d.screenMin)&&d.screenMin<=g.screenMin?'<i style="background:var(--cor)"></i>':'')+(evs().some(e=>e.date===k)?'<i style="background:var(--gold);outline:1px solid var(--goldk)"></i>':'');
+  cells+=`<button class="cell ${a>.55?'hi':''} ${k===S.calSel?'sel':''} ${fut?'fut':''}" style="--a:${(a*.9).toFixed(2)}" data-act="calday" data-k="${k}" aria-label="${esc(dLabel(k))}"><span>${+k.slice(8)}</span><span class="dots">${dots}</span></button>`}
  const sel=S.calSel&&S.calSel.slice(0,7)===m?S.calSel:null;let det='';
- if(sel){const d=days[sel]||{},st=priv(),done=st.habits.filter(h=>(st.logs[sel]||[]).includes(h.id)),miss=st.habits.filter(h=>!(st.logs[sel]||[]).includes(h.id));
+ if(sel&&sel<=t){const d=days[sel]||{},st=priv(),done=st.habits.filter(h=>(st.logs[sel]||[]).includes(h.id)),miss=st.habits.filter(h=>!(st.logs[sel]||[]).includes(h.id));
   det=`<section class="card"><h2>${esc(dLabel(sel))}</h2><div class="small mut">Habits</div><p style="margin:4px 0 10px">${done.length?done.map(h=>esc((h.emoji||'')+' '+h.name)).join(', '):'None ticked'}${miss.length&&done.length?`<br><span class="mut small">Missed: ${miss.map(h=>esc(h.name)).join(', ')}</span>`:''}</p>
   <div class="two"><div><div class="small mut">Sleep</div><div class="num" style="font-size:22px">${num(d.sleepH)?fmtMin(d.sleepH*60):'—'}</div>${d.bed?`<div class="small mut">${esc(d.bed)}${d.wake?' to '+esc(d.wake):''}</div>`:''}</div><div><div class="small mut">Screen time</div><div class="num" style="font-size:22px">${num(d.screenMin)?fmtMin(d.screenMin):'—'}</div></div></div></section>`}
  const s=dayStreaks(days);
  return `<header class="top"><div class="in"><h1>My calendar</h1><p>Current streak ${s.cur} perfect day${s.cur==1?'':'s'} · best ${s.best}</p></div></header>
- <main class="wrap lift">${banners()}<section class="card"><div class="row" style="margin-bottom:12px"><button class="btn line sm" data-act="calm" data-n="-1" aria-label="Previous month">‹</button><h2 class="sp" style="text-align:center;margin:0">${mLabel(m)}</h2><button class="btn line sm" data-act="calm" data-n="1" aria-label="Next month" ${m>=curM()?'disabled':''}>›</button></div>
- <div class="cal">${cells}</div><div class="legend"><span><i style="background:var(--co)"></i>Habits done (darker = more)</span><span><i style="background:var(--ind)"></i>Sleep goal met</span><span><i style="background:var(--cor)"></i>Screen goal met</span></div></section>${det}</main>`;
+ <main class="wrap lift">${banners()}<section class="card"><div class="row" style="margin-bottom:12px"><button class="btn line sm" data-act="calm" data-n="-1" aria-label="Previous month">‹</button><h2 class="sp" style="text-align:center;margin:0">${mLabel(m)}</h2><button class="btn line sm" data-act="calm" data-n="1" aria-label="Next month">›</button></div>
+ <div class="cal">${cells}</div><div class="legend"><span><i style="background:var(--co)"></i>Habits done (darker = more)</span><span><i style="background:var(--ind)"></i>Sleep goal met</span><span><i style="background:var(--cor)"></i>Screen goal met</span><span><i style="background:var(--gold)"></i>Reminder</span></div></section>${remCard(sel)}${det}${upcomingCard()}</main>`;
 }
 function lbHTML(p,m){
  const b=board(p,m);if(!b)return '';
@@ -438,6 +438,7 @@ function vModal(){
   <div class="btns" style="margin-top:16px"><button class="btn">Join</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
  if(M.k==='logout')body=`<h2>Log out of Habitor?</h2><p class="mut">Your habits, parties and trophies stay saved. Log back in any time to pick up where you left off.</p><div class="btns" style="margin-top:16px"><button class="btn danger" data-act="dologout">Log out</button><button class="btn ghost" data-act="other">Use another account</button><button class="btn line" data-act="close">Cancel</button></div>`;
  if(M.k==='other')body=otherModal();
+ if(M.k==='remind'){const now=Date.now();body=`<div style="text-align:center"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="var(--co)" stroke-width="2"/><path d="M12 9v4l2.5 2M4 5l3-2M20 5l-3-2" fill="none" stroke="var(--co)" stroke-width="2" stroke-linecap="round"/></svg><h2 style="margin-top:6px">Reminder</h2></div>${M.list.map(e=>`<div class="card" style="margin:10px 0"><b style="font-size:18px">${esc(e.title)}</b><br><span class="mut">${evTs(e)<now-3600000?'Was ':''}${esc(dLabel(e.date))} at ${esc(clock12(e.time))}</span></div>`).join('')}<div class="btns"><button class="btn" data-act="close">Got it</button><button class="btn line" data-act="snooze">Remind me in 10 minutes</button></div>`}
  if(M.k==='newacct')body=`<h2>Create a new account</h2><p class="mut">Pick a username nobody else has. You'll need the password to log in on other devices.</p>${profileForm(null,true,true)}`;
  if(M.k==='save'){const p=S.profiles[M.id]||{};body=`<h2>Save this account?</h2><p class="mut">Save @${esc(p.username||'')} on this device so you can switch to it from the log out screen without a password.</p><div class="btns" style="margin-top:16px"><button class="btn" data-act="saveyes">Save account</button><button class="btn line" data-act="saveno">Not now</button></div>`}
  if(M.k==='editprofile')body=`<h2>Edit profile</h2>${profileForm(me(),false)}`;
@@ -658,6 +659,29 @@ function otherModal(){return `<h2>Use another account</h2><p class="mut">Log in 
  <div class="btns" style="margin-top:14px"><button class="btn">Log in</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>
  <hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><p style="margin:0 0 10px;font-weight:600">New to Habitor?</p><button class="btn ghost" data-act="newacct" style="width:100%">Create a new account</button>`}
 
+/* ---------- reminders ---------- */
+const evs=()=>Array.isArray(priv().events)?priv().events:[];
+const evTs=e=>{const [y,mo,d]=e.date.split('-').map(Number),[h,mi]=(e.time||'09:00').split(':').map(Number);return new Date(y,mo-1,d,h,mi).getTime()};
+const dueAt=e=>e.snooze||evTs(e)-(e.before||0)*60000;
+const BEFORE=[[0,'At the time'],[10,'10 minutes before'],[30,'30 minutes before'],[60,'1 hour before'],[1440,'1 day before']];
+const evLine=e=>`${esc(e.title)} · ${esc(dLabel(e.date))}, ${esc(clock12(e.time))}`;
+function remCard(sel){if(!sel)return '';const list=evs().filter(e=>e.date===sel).sort((a,b)=>a.time.localeCompare(b.time));
+ return `<section class="card"><h2>Reminders for ${esc(dLabel(sel))}</h2>${list.length?list.map(e=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line)"><div class="sp"><b>${esc(clock12(e.time))}</b> · ${esc(e.title)}<br><span class="small mut">${esc((BEFORE.find(x=>x[0]===(e.before||0))||BEFORE[0])[1])}${e.fired?' · reminded':''}</span></div><button class="x" data-act="evdel" data-id="${e.id}" aria-label="Delete reminder ${esc(e.title)}">✕</button></div>`).join(''):'<p class="small mut" style="margin:0 0 4px">Nothing planned yet.</p>'}
+ <form data-form="event" style="margin-top:10px"><label class="f" for="et">What's happening?</label><input id="et" type="text" name="title" maxlength="80" placeholder="Dentist, football practice, call Grandma…" required>
+ <div class="two"><div><label class="f" for="eh">Time</label><input id="eh" type="time" name="time" value="09:00" required></div><div><label class="f" for="eb">Remind me</label><select id="eb" name="before">${BEFORE.map(([v,l])=>`<option value="${v}" ${v===10?'selected':''}>${l}</option>`).join('')}</select></div></div>
+ <div class="btns" style="margin-top:12px"><button class="btn">Add reminder</button></div></form>
+ ${notifCanAsk()?'<button class="btn line sm" data-act="notifon" style="margin-top:12px">Also show phone notifications</button>':''}
+ <p class="small mut" style="margin:10px 0 0">Habitor reminds you while the app is open, or as soon as you next open it.</p></section>`}
+function upcomingCard(){const now=Date.now(),up=evs().filter(e=>evTs(e)>=now).sort((a,b)=>evTs(a)-evTs(b)).slice(0,5);if(!up.length)return '';
+ return `<section class="card"><h2>Coming up</h2>${up.map(e=>`<button class="frow" data-act="calday" data-k="${e.date}" style="min-height:48px"><span class="sp">${evLine(e)}</span></button>`).join('')}</section>`}
+const notifCanAsk=()=>{try{return 'Notification' in window&&Notification.permission==='default'}catch(e){return false}};
+function notify(t,b){try{if('Notification' in window&&Notification.permission==='granted')new Notification(t,{body:b})}catch(e){}}
+function checkReminders(){if(!S.ready||S.out||!S.loaded.v||!me())return;const now=Date.now(),due=evs().filter(e=>!e.fired&&dueAt(e)<=now);if(!due.length)return;
+ const st=clone(priv());st.events=evs().map(e=>due.some(d=>d.id===e.id)?{...e,fired:true}:e);
+ const ids=[...new Set([...((S.modal&&S.modal.k==='remind')?S.modal.ids:[]),...due.map(e=>e.id)])];
+ due.forEach(e=>notify('Habitor reminder',`${e.title} at ${clock12(e.time)}`));
+ S.modal={k:'remind',ids,list:st.events.filter(e=>ids.includes(e.id))};savePriv(st)}
+setInterval(checkReminders,20000);
 const curSkin=()=>priv().skin||document.documentElement.dataset.skin||'club';
 function render(){
  if(S.priv&&S.priv.skin&&S.priv.skin!==document.documentElement.dataset.skin)applySkin(S.priv.skin);
@@ -703,6 +727,9 @@ document.addEventListener('click',e=>{
  else if(a==='funfriend'){if(S.modal&&S.modal.confirm)friendAct(a,b.dataset.uid);else{S.modal={...S.modal,confirm:true};render()}}
  else if(a==='fchat'){S.tab='friends';S.chat=b.dataset.uid;S.modal=null;render()}
  else if(a==='fback'){S.chat=null;render();scrollTo(0,0)}
+ else if(a==='evdel'){const st=clone(priv());st.events=evs().filter(e=>e.id!==b.dataset.id);savePriv(st);toast('Reminder deleted')}
+ else if(a==='snooze'){const ids=(S.modal&&S.modal.ids)||[],st=clone(priv());st.events=evs().map(e=>ids.includes(e.id)?{...e,fired:false,snooze:Date.now()+600000}:e);S.modal=null;savePriv(st);toast('I\'ll remind you in 10 minutes')}
+ else if(a==='notifon'){try{Notification.requestPermission().then(p=>{toast(p==='granted'?'Notifications are on':'Notifications are off. Reminders will still show inside Habitor.');render()}).catch(()=>toast('This browser can\'t show notifications here. Reminders will show inside Habitor.'))}catch(e){toast('This browser can\'t show notifications here. Reminders will show inside Habitor.')}}
  else if(a==='calm'){S.calM=addMonths(S.calM,+b.dataset.n);render()}
  else if(a==='calday'){S.calSel=b.dataset.k;render()}
  else if(a==='openparty'){S.party=b.dataset.id;render();scrollTo(0,0)}
@@ -730,6 +757,9 @@ document.addEventListener('submit',e=>{
    const h=await hashPw(pw,a.salt);if(h!==a.hash){err.textContent='Wrong password. Try again.';return}
    const known=id===S.cuid||savedAccts().includes(id);switchTo(id,known);if(!known){S.modal={k:'save',id};render()}}
    catch(e){err.textContent="Couldn't log in just now. Try again."}finally{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Log in'}}})()}
+ else if(t==='event'){const title=val('title').slice(0,80),time=val('time'),before=+val('before')||0;if(!title||!/^\d{2}:\d{2}$/.test(time)||!S.calSel)return;
+  const e={id:rid(),date:S.calSel,time,title,before,fired:false};const st=clone(priv());st.events=[...evs(),e].slice(-500);
+  if(dueAt(e)<=Date.now())e.fired=evTs(e)<Date.now();deferred=false;savePriv(st);toast(evTs(e)<Date.now()?'Added (that time has already passed)':dueAt(e)<=Date.now()?'Reminder set':`I'll remind you ${BEFORE.find(x=>x[0]===before)[1].toLowerCase()}`)}
  else if(t==='goals'){const s=parseFloat(val('sleep')),sc=parseInt(val('screen'),10);if(!(s>=4&&s<=12&&sc>=15&&sc<=1440)){toast('Check your goals');return}const st=clone(priv());st.goals={sleepH:s,screenMin:sc,bed:val('bed')||'23:30'};deferred=false;savePriv(st);toast('Goals saved')}
  else if(t==='profile'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])'),isNew=f.dataset.new==='1',id=isNew?'a'+rid():S.uid,pw=String(F.get('pw')||'');
   if(pw&&pw.length<6){err.textContent='Password must be at least 6 characters.';return}
@@ -752,7 +782,7 @@ document.addEventListener('submit',e=>{
 });
 
 /* ---------- boot ---------- */
-function ready(){if(S.loaded.p&&S.uid!==S.cuid&&!S.profiles[S.uid]){S.uid=S.cuid;setActive(S.cuid,true);subPriv();return}migrateClaim();if(S.loaded.p&&S.loaded.v&&!S.ready){S.ready=true;render()}awardCheck();soon()}
+function ready(){setTimeout(checkReminders,0);if(S.loaded.p&&S.uid!==S.cuid&&!S.profiles[S.uid]){S.uid=S.cuid;setActive(S.cuid,true);subPriv();return}migrateClaim();if(S.loaded.p&&S.loaded.v&&!S.ready){S.ready=true;render()}awardCheck();soon()}
 async function boot(){
  const slow=setTimeout(()=>{S.slow=true;render()},10000);
  let db=null,user=null;

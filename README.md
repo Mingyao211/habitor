@@ -20,3 +20,8 @@ A habit tracker for friends. Track habits, sleep and screen time, join a party, 
 ## Running it
 
 `index.html` is a single self-contained page. Opened directly in a browser it runs in preview mode and saves data in that browser only. Shared data (parties, leaderboards, profiles) works when it is hosted as a Claude artifact, which provides the database and sign-in.
+
+## Versions
+
+- `web/` — the Supabase version (real email and password accounts, private chats, live updates). Deployed on Vercel.
+- `index.html` — the original version that runs as a Claude artifact.

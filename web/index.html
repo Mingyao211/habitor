@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Habitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,800&family=Instrument+Sans:wght@400;500;600;700&family=Inter+Tight:wght@400;600;800&family=Space+Grotesk:wght@400;500;700&family=Fredoka:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a friendly sports club for friends; competitive but never shaming
+   IDEA: a club league table and trophy room that lives in your pocket
+   PICTURE: today's score dial, the live party leaderboard, gold trophies
+   COLOUR+TYPE: cobalt field, trophy gold accent, coral for screens; Archivo wide for numbers, Instrument Sans for text
+   LAYOUT: one phone-width column, cards stacked, bottom tab bar */
+:root{color-scheme:light dark;
+--bg:light-dark(#f4f2ec,#0d0e1a);--card:light-dark(#fff,#171933);--ink:light-dark(#14141c,#f1f0f7);--mut:light-dark(#5f5f6c,#a6a6bb);
+--line:light-dark(#e2dfd6,#2b2d4c);--co:#3346ff;--co-ink:light-dark(#2433d6,#9aa5ff);--co2:light-dark(#e7e9ff,#222a6e);
+--gold:#ffbf1f;--goldk:light-dark(#8a5d00,#ffd668);--cor:#ff6b4a;--ind:#7b61ff;--ok:light-dark(#0f7b4f,#5be0a4);
+--top:var(--co);--top-ink:#fff;--on-co:#fff;--fd:Archivo,system-ui,sans-serif;--fs:112%;--fb:"Instrument Sans",system-ui,sans-serif;--bw:1px;--sh:none}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+:root[data-skin=ritual]{color-scheme:light;--bg:#F2F2EF;--card:#fff;--ink:#141414;--mut:#5E5E5E;--line:#E2E2DE;--co:#141414;--co-ink:#141414;--co2:#ECECE8;--on-co:#fff;--gold:#E8604C;--goldk:#9C3424;--cor:#E8604C;--ind:#5B6BD6;--ok:#1F7A55;--top:#fff;--top-ink:#141414;--fd:"Inter Tight",system-ui,sans-serif;--fs:100%;--fb:"Inter Tight",system-ui,sans-serif}
+:root[data-skin=night]{color-scheme:dark;--bg:#0B0D26;--card:#15183D;--ink:#F3F1FF;--mut:#A9A6D6;--line:#2A2E66;--co:#B9B2FF;--co-ink:#C9C3FF;--co2:#2A2E66;--on-co:#0B0D26;--gold:#FFC94A;--goldk:#FFD668;--cor:#FF8FB1;--ind:#B9B2FF;--ok:#7CE0C3;--top:#15183D;--top-ink:#F3F1FF;--fd:"Space Grotesk",system-ui,sans-serif;--fs:100%;--fb:"Space Grotesk",system-ui,sans-serif}
+:root[data-skin=pop]{color-scheme:light;--bg:#FFF4E6;--card:#fff;--ink:#2B1A12;--mut:#6E5446;--line:#2B1A12;--co:#FF7A2F;--co-ink:#8F3500;--co2:#FFE36E;--on-co:#2B1A12;--gold:#FFC21A;--goldk:#2B1A12;--cor:#E8457F;--ind:#6F55F0;--ok:#1F7A45;--top:#FF5FA2;--top-ink:#2B1A12;--fd:Fredoka,system-ui,sans-serif;--fs:100%;--fb:Fredoka,system-ui,sans-serif;--bw:2px;--sh:4px 4px 0 #2B1A12}
+:root[data-skin=field]{color-scheme:light;--bg:#EEF0E8;--card:#F7F7F2;--ink:#17261F;--mut:#4E5E55;--line:#D9DCD0;--co:#1F4D3A;--co-ink:#1F4D3A;--co2:#E3ECDD;--on-co:#F7F7F2;--gold:#F2C14E;--goldk:#7A5800;--cor:#C8553D;--ind:#2B4C7E;--ok:#2E7D4F;--top:#1F4D3A;--top-ink:#F7F7F2;--fd:Fraunces,Georgia,serif;--fs:100%;--fb:"DM Sans",system-ui,sans-serif}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--fb);overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--co);outline-offset:2px}
+.wrap{max-width:520px;margin:0 auto;padding:16px 16px 104px}
+.top{background:var(--top);color:var(--top-ink);padding:20px 16px 56px}
+.top .in{max-width:520px;margin:0 auto}
+.top h1{font:800 32px/1.05 var(--fd);font-stretch:var(--fs);margin:0;text-wrap:balance}
+.top p{margin:6px 0 0;opacity:.85}
+.lift{margin-top:-44px}
+.num{font-family:var(--fd);font-stretch:var(--fs);font-weight:800}
+.card{background:var(--card);border:var(--bw) solid var(--line);box-shadow:var(--sh);border-radius:20px;padding:18px;margin-bottom:14px}
+.card h2{font-size:18px;margin:0 0 10px;font-weight:700}
+.row{display:flex;align-items:center;gap:12px}
+.sp{flex:1}
+.mut{color:var(--mut)}
+.small{font-size:13px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid color-mix(in srgb,var(--top-ink) 45%,transparent);background:transparent;color:var(--top-ink);border-radius:999px;padding:8px 14px;min-height:40px}
+.chip.on{background:var(--top-ink);color:var(--top);border-color:var(--top-ink);font-weight:600}
+.btn{border:0;border-radius:14px;padding:12px 18px;min-height:46px;background:var(--co);color:var(--on-co);font-weight:600}
+.btn.ghost{background:var(--co2);color:var(--co-ink)}
+.btn.line{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.danger{background:transparent;border:1px solid var(--cor);color:var(--cor)}
+.btn.sm{min-height:40px;padding:8px 14px;border-radius:12px;font-size:15px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+input[type=text],input[type=email],input[type=password],input[type=search],input[type=number],input[type=time],textarea,select{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;font-size:16px;min-height:46px}
+textarea{resize:vertical;min-height:80px}
+label.f{display:block;font-size:14px;font-weight:600;margin:12px 0 6px}
+.dial{display:grid;grid-template-columns:140px minmax(0,1fr);gap:16px;align-items:center}
+.dial svg{width:140px;height:140px}
+.big{font-size:44px;line-height:1}
+.habit{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.habit:first-of-type{border-top:0}
+.emo{width:44px;height:44px;border-radius:14px;background:var(--co2);display:grid;place-items:center;font-size:22px;flex:none}
+.tick{width:48px;height:48px;border-radius:50%;border:2px solid var(--line);background:transparent;display:grid;place-items:center;flex:none;transition:transform .15s}
+.tick.on{background:var(--co);border-color:var(--co);color:var(--on-co)}
+.tick.on svg{animation:pop .25s ease-out}
+@keyframes pop{from{transform:scale(.4)}to{transform:scale(1)}}
+.x{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--cor);flex:none}
+.add{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:8px;margin-top:12px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.meter{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:8px 0 4px}
+.meter i{display:block;height:100%;border-radius:99px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cal .h{font-size:12px;color:var(--mut);text-align:center}
+.cell{aspect-ratio:1;border-radius:12px;border:1px solid var(--line);background:color-mix(in srgb,var(--co) calc(var(--a,0)*100%),var(--card));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0;font-size:14px}
+.cell.hi{color:var(--on-co)}
+.cell.sel{outline:3px solid var(--gold);outline-offset:1px}
+.cell.fut{opacity:.4}
+.dots{display:flex;gap:3px;height:6px}
+.dots i{width:6px;height:6px;border-radius:50%}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-top:12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.lb{list-style:none;margin:0;padding:0}
+.lb li{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:14px;cursor:pointer}
+.lb li.me{background:var(--co2)}
+.rk{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--line);flex:none;font-family:var(--fd)}
+.rk.g{background:var(--gold);color:#3a2700}
+.av{width:44px;height:44px;border-radius:50%;background:var(--co2);display:grid;place-items:center;font-size:24px;flex:none}
+.av.xl{width:96px;height:96px;font-size:54px;border:4px solid var(--card)}
+.sc{text-align:right;max-width:46%}
+.sc b{display:block;white-space:nowrap}
+.pcard{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--card);border:var(--bw) solid var(--line);box-shadow:var(--sh);border-radius:20px;padding:16px;margin-bottom:12px}
+.pe{width:52px;height:52px;border-radius:16px;background:var(--co);display:grid;place-items:center;font-size:28px;flex:none}
+.code{font-family:var(--fd);font-weight:800;font-stretch:var(--fs);letter-spacing:.12em;font-size:22px}
+.trophies{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.tro{border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center;background:linear-gradient(var(--card),color-mix(in srgb,var(--gold) 12%,var(--card)))}
+.tro b{display:block;font-size:14px}
+.empty{text-align:center;padding:18px 8px;color:var(--mut)}
+.stats3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center}
+.stats3 .num{font-size:28px;display:block}
+.avpick{display:flex;flex-wrap:wrap;gap:8px}
+.avpick label{cursor:pointer}
+.avpick input{position:absolute;opacity:0;pointer-events:none}
+.avpick span{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:26px;border:2px solid var(--line)}
+.avpick input:checked+span{border-color:var(--co);background:var(--co2)}
+.avpick input:focus-visible+span{outline:3px solid var(--co)}
+.chs{display:grid;gap:8px}
+.cho{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:12px;background:transparent;text-align:left;width:100%}
+.cho.on{border-color:var(--co);background:var(--co2)}
+.skins{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.skin{display:flex;flex-direction:column;gap:8px;align-items:flex-start;border:2px solid var(--line);border-radius:16px;padding:12px;background:transparent;text-align:left;min-height:44px}
+.skin.on{border-color:var(--co);background:var(--co2)}
+.skin .sw{display:flex;gap:4px}.skin .sw i{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.15)}
+.board{display:grid;width:100%;max-width:460px;margin:0 auto;border-radius:12px;overflow:hidden;border:var(--bw) solid var(--line)}
+.b8{grid-template-columns:repeat(8,minmax(0,1fr))}
+.sq{aspect-ratio:1;border:0;padding:0;display:grid;place-items:center;position:relative;line-height:1}
+.sq.l{background:color-mix(in srgb,var(--co2) 75%,var(--card))}.sq.d{background:color-mix(in srgb,var(--co) 55%,var(--card))}
+.sq.last{box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--gold) 28%,transparent)}
+.sq.sel{box-shadow:inset 0 0 0 4px var(--gold)}
+.sq.dot::after{content:"";width:28%;height:28%;border-radius:50%;background:color-mix(in srgb,var(--ink) 35%,transparent);position:absolute}
+.sq.cap{box-shadow:inset 0 0 0 4px color-mix(in srgb,var(--ink) 45%,transparent)}
+.pc{font-size:clamp(24px,8.4vw,42px);font-family:"Segoe UI Symbol","Noto Sans Symbols 2","DejaVu Sans",serif}
+.pc.w{color:#fff;text-shadow:0 0 1px #000,0 0 2px #000,0 1px 2px #000}.pc.b{color:#141414;text-shadow:0 0 2px rgba(255,255,255,.7)}
+.ck{width:74%;height:74%;border-radius:50%;display:grid;place-items:center;font-size:clamp(14px,4.4vw,22px);font-family:"Segoe UI Symbol","DejaVu Sans",serif}
+.ck.w{background:#f7f3ea;color:#8a5d00;box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 1px 2px rgba(0,0,0,.4)}
+.ck.b{background:#1d1d24;color:#ffbf1f;box-shadow:inset 0 -4px 0 rgba(255,255,255,.12),0 1px 2px rgba(0,0,0,.4)}
+.c4{grid-template-columns:repeat(7,minmax(0,1fr));background:var(--co);padding:6px;gap:4px;border-radius:16px}
+.hole{aspect-ratio:1;border:0;padding:3px;background:transparent;display:grid;place-items:center}
+.disc{width:100%;height:100%;border-radius:50%;background:var(--bg)}.disc.r{background:#e8304b}.disc.y{background:#ffc21a}.disc.win{outline:4px solid var(--card);outline-offset:-4px}
+.t3{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;border:0;max-width:340px}
+.tcell{aspect-ratio:1;border:var(--bw) solid var(--line);border-radius:16px;background:var(--card);font:800 clamp(40px,14vw,64px)/1 var(--fd);color:var(--co-ink)}
+.tcell.win{background:var(--co2)}
+.mem{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;border:0;max-width:380px}
+.card2{aspect-ratio:1;border:0;border-radius:14px;background:var(--co);color:var(--co);font-size:clamp(28px,9vw,40px);font-family:"Segoe UI Symbol","DejaVu Sans",serif}
+.card2.up{background:var(--card);color:var(--ink);border:2px solid var(--co)}.card2.done{background:var(--co2);border-color:var(--co2);color:var(--co-ink)}
+.tbadge{position:absolute;top:6px;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:var(--cor);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px}
+.badge{min-width:24px;height:24px;border-radius:12px;background:var(--cor);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;padding:0 7px}
+.frow{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:transparent;border:0;border-top:1px solid var(--line);padding:12px 0;min-height:64px}
+.msgs{display:flex;flex-direction:column;gap:8px}
+.bub{max-width:80%;padding:10px 14px;border-radius:18px;display:flex;flex-direction:column;gap:2px;overflow-wrap:anywhere}
+.bub time{font-size:11px;opacity:.7}
+.bub.me{align-self:flex-end;background:var(--co);color:var(--on-co);border-bottom-right-radius:6px}
+.bub.them{align-self:flex-start;background:var(--card);border:var(--bw) solid var(--line);border-bottom-left-radius:6px}
+.composer{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));display:flex;gap:8px;padding:10px max(16px,calc(50% - 244px));background:var(--bg);border-top:1px solid var(--line);z-index:4}
+.composer input{flex:1}
+.days{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}.days legend{margin-bottom:6px}
+.days label{cursor:pointer}.days input{position:absolute;opacity:0;pointer-events:none}
+.days span{display:grid;place-items:center;min-width:44px;height:44px;padding:0 8px;border-radius:12px;border:var(--bw) solid var(--line);background:var(--card);font-weight:600;font-size:14px}
+.days input:checked+span{background:var(--co);border-color:var(--co);color:var(--on-co)}.days input:focus-visible+span{outline:3px solid var(--co)}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+.tabs .in{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));width:100%;max-width:520px}
+.tabs button{position:relative;border:0;background:transparent;padding:10px 2px 12px;min-height:64px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--mut)}
+.tabs button.on{color:var(--co-ink);font-weight:700}
+.tabs svg{width:24px;height:24px}
+.ov{position:fixed;inset:0;background:rgba(10,10,30,.55);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.sheet{background:var(--bg);width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;padding:20px 18px 28px}
+.sheet h2{font:800 26px/1.1 var(--fd);font-stretch:var(--fs);margin:0 0 6px}
+.toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:20;max-width:90vw;font-size:15px}
+.note{background:color-mix(in srgb,var(--gold) 22%,var(--card));border:1px solid color-mix(in srgb,var(--gold) 50%,var(--line));border-radius:14px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+.load{min-height:80vh;display:grid;place-items:center;text-align:center;color:var(--mut)}
+.hint-ok{color:var(--ok)}.hint-bad{color:var(--cor)}
+.err{color:var(--cor);font-size:14px;margin-top:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:380px){.dial{grid-template-columns:110px minmax(0,1fr)}.dial svg{width:110px;height:110px}.big{font-size:36px}}
+</style>
+</head>
+<body>
+<div id="app"><div class="load"><div><div class="num" style="font-size:28px;color:var(--co-ink)">Habitor</div><p>Loading your club…</p></div></div></div>
+<div id="modal"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const dkey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseK=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d||1)};
+const addDays=(k,n)=>{const d=parseK(k);d.setDate(d.getDate()+n);return dkey(d)};
+const addMonths=(m,n)=>{const d=parseK(m+'-01');d.setMonth(d.getMonth()+n);return dkey(d).slice(0,7)};
+const todayK=()=>dkey(new Date());
+const curM=()=>todayK().slice(0,7);
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const mLabel=m=>`${MONTHS[+m.slice(5,7)-1]} ${m.slice(0,4)}`;
+const dLabel=k=>parseK(k).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+const monthDays=m=>{const d=parseK(m+'-01');const n=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();return Array.from({length:n},(_,i)=>`${m}-${pad(i+1)}`)};
+const fmtMin=v=>{v=Math.round(v);const h=Math.floor(v/60),m=v%60;return h?`${h}h ${pad(m)}m`:`${m}m`};
+const num=v=>typeof v==='number'&&isFinite(v);
+const clock12=x=>{const m=/^(\d{1,2}):(\d{2})/.exec(x||'');if(!m)return x;const h=+m[1];return `${h%12||12}:${m[2]} ${h<12?'am':'pm'}`};
+const clockMins=x=>{const m=/^(\d{1,2}):(\d{2})/.exec(x||'');if(!m)return null;const v=(+m[1])*60+(+m[2]);return v<720?v+1440:v};
+const sleepMins=(b,w)=>{const t=x=>{const m=/^(\d{1,2}):(\d{2})/.exec(x||'');return m?(+m[1])*60+(+m[2]):null};const a=t(b),c=t(w);if(a==null||c==null)return 0;return (c-a+1440)%1440};
+const rnd=(n,abc)=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>abc[b%32]).join('');
+const rid=()=>rnd(12,'abcdefghijkmnpqrstuvwxyz23456789');
+const code6=()=>rnd(6,'ABCDEFGHJKLMNPQRSTUVWXYZ23456789');
+const deepMerge=(a,b)=>{const o={...a};for(const k in b){const v=b[k],c=o[k];o[k]=(v&&typeof v==='object'&&!Array.isArray(v)&&c&&typeof c==='object'&&!Array.isArray(c))?deepMerge(c,v):v}return o};
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+const CH={
+ screen:{name:'Lowest screen time',rule:'Lowest average daily screen time wins',lower:true},
+ sleep:{name:'Sleep champion',rule:'Most nights with 7.5 hours or more of sleep'},
+ habits:{name:'Habit master',rule:'Most days with every habit ticked off'},
+ streak:{name:'Streak king',rule:'Longest run of perfect habit days'}};
+const TIPS={
+ sleep:['Wake up at the same time every day, weekends too. A steady wake-up time anchors your body clock, so falling asleep gets easier.',
+ 'Put your phone on charge across the room or outside your bedroom 30 minutes before bed.',
+ 'Dim your screens and turn on Night Shift or Bedtime mode for the last hour before bed.',
+ 'Skip coffee, tea and energy drinks after 2 pm. Caffeine can keep you alert for six hours or more.',
+ 'Keep your room cool, dark and quiet. An eye mask or earplugs are cheap fixes that work.',
+ 'Get outside within an hour of waking up. Morning daylight helps you feel sleepy earlier at night.',
+ 'Set a wind-down alarm 45 minutes before your target bedtime, then start a calm routine: shower, read, stretch.',
+ 'Move your bedtime 15 minutes earlier every few nights instead of all at once.',
+ 'Can\'t fall asleep after about 20 minutes? Get up, do something calm in dim light, then try again.'],
+ screen:['Set app limits on your two most-used apps: Screen Time on iPhone, Digital Wellbeing on Android.',
+ 'Turn off notifications for everything except messages from real people.',
+ 'Move social apps off your home screen into a folder on the last page.',
+ 'Try grayscale mode in the evening. A colourless phone is far less tempting to scroll.',
+ 'Leave your phone in another room while you study, eat or hang out with friends.',
+ 'Swap one scrolling session for something offline: a walk, a book, a game with friends.',
+ 'Log out of the app you open most. The extra login step breaks the automatic habit.',
+ 'Turn on Downtime or Bedtime mode so only calls and a few key apps work late at night.',
+ 'Before you unlock your phone, ask yourself what you picked it up for.']};
+const AV=['🦊','🐼','🐸','🦉','🐯','🐙','🦄','🐻','🐧','🐨','🦁','🐳'];
+const PE=['🔥','🌙','📵','💪','⚡','🌱','🎯','🎉'];
+const SKINS=[['ritual','Quiet Ritual','Minimal white, coral dot',['#141414','#FFFFFF','#E8604C']],['night','Night Owl','Midnight, lavender, gold moon',['#0B0D26','#B9B2FF','#FFC94A']],['club','Club League','Cobalt and trophy gold',['#3346FF','#FFBF1F','#F4F2EC']],['pop','Sunrise Pop','Loud, warm and playful',['#FF7A2F','#FF5FA2','#FFE36E']],['field','Field Notes','Forest green and sunlight',['#1F4D3A','#CFE3C8','#F2C14E']]];
+const SKEY='streak-party-skin';
+function applySkin(k){if(!SKINS.some(x=>x[0]===k))k='club';document.documentElement.dataset.skin=k;try{localStorage.setItem(SKEY,k)}catch(e){}}
+try{applySkin(localStorage.getItem(SKEY)||'club')}catch(e){applySkin('club')}
+
+let wasOut=false;try{wasOut=localStorage.getItem('habitor-signed-out')==='1'}catch(e){}
+const S={cuid:null,usernames:{},friends:{},chats:{},chat:null,fq:'',out:wasOut,game:null,tips:{},ready:false,local:false,uid:null,tab:'today',day:todayK(),calM:curM(),calSel:todayK(),party:null,modal:null,edit:false,
+ profiles:{},stats:{},parties:{},trophies:{},priv:null,privPending:0,lastPriv:undefined,loaded:{p:false,v:false},slow:false,readonly:false,err:{}};
+
+/* ---------- Supabase ---------- */
+const SB_URL='https://mjbygzuhsmbrvhspzukf.supabase.co',SB_KEY='sb_publishable_1Oik47v08ICGDi_IpW47IQ_LCokOmH5';
+let sb=null,rt=null,reloadTimer=null;
+const Q={};
+function write(key,fn){const p=(Q[key]||Promise.resolve()).then(fn).then(r=>{if(r&&r.error)throw r.error;return r}).catch(e=>{console.error(e);toast(errText(e));render()});Q[key]=p;return p}
+function errText(e){const m=String((e&&(e.message||e.error_description))||'');
+ if(/fetch|network/i.test(m))return "Couldn't reach Habitor's server. Check your connection.";
+ if(e&&e.code==='23505')return 'That is already taken.';
+ return m?`Couldn't save: ${m}`:"Couldn't save just now. Try again."}
+const dayFromRow=r=>{const d={};if(r.done!=null)d.done=r.done;if(r.total!=null)d.total=r.total;if(r.sleep_h!=null)d.sleepH=Number(r.sleep_h);if(r.sleep_min!=null)d.sleepMin=r.sleep_min;if(r.bed)d.bed=r.bed;if(r.wake)d.wake=r.wake;if(r.screen_min!=null)d.screenMin=r.screen_min;if(r.src)d.src=r.src;return d};
+const dayToRow=p=>{const r={};if('done' in p)r.done=p.done;if('total' in p)r.total=p.total;if('sleepH' in p)r.sleep_h=p.sleepH;if('sleepMin' in p)r.sleep_min=p.sleepMin;if('bed' in p)r.bed=p.bed||null;if('wake' in p)r.wake=p.wake||null;if('screenMin' in p)r.screen_min=p.screenMin;if('src' in p)r.src=p.src;return r};
+function addMsg(r){if(!r||!S.uid)return;const pid=pairId(r.a,r.b),by={...(S.chats[pid]||{})},arr=(by[r.sender]||[]).filter(m=>m.id!==r.id&&!(m.tmp&&m.t===r.body));
+ arr.push({id:r.id,t:r.body,at:Date.parse(r.created_at)});arr.sort((x,y)=>x.at-y.at);by[r.sender]=arr;S.chats={...S.chats,[pid]:by};if(S.tab==='friends'&&S.chat&&pairId(S.uid,S.chat)===pid)markRead(pid)}
+async function loadAll(first){const uid=S.uid;if(!uid)return;
+ const since=addDays(todayK(),-400);
+ const qs=[sb.from('profiles').select('id,username,name,avatar,bio'),sb.from('daily_stats').select('*').gte('day',since),sb.from('parties').select('*'),sb.from('party_members').select('*'),
+  sb.from('challenges').select('*'),sb.from('trophies').select('*'),sb.from('friendships').select('*'),sb.from('messages').select('*').order('created_at',{ascending:false}).limit(1000)];
+ if(first)qs.push(sb.from('user_state').select('data').eq('user_id',uid).maybeSingle());
+ const res=await Promise.all(qs);const bad=res.find(r=>r.error);if(bad){console.error(bad.error);toast("Couldn't load your data. Check your connection.");return false}
+ if(uid!==S.uid)return false;
+ const [pr,st,pa,pm,ch,tr,fr,ms,us]=res.map(r=>r.data||(Array.isArray(r.data)?[]:r.data));
+ S.profiles=Object.fromEntries((pr||[]).map(r=>[r.id,{name:r.name,username:r.username,avatar:r.avatar,bio:r.bio}]));
+ const stats={};for(const r of st||[]){(stats[r.user_id]??={days:{}}).days[r.day]=dayFromRow(r)}S.stats=stats;
+ const parties={};for(const r of pa||[])parties[r.id]={name:r.name,emoji:r.emoji,code:r.code,host:r.host,created:Date.parse(r.created_at),members:{},challenges:{}};
+ for(const r of pm||[])if(parties[r.party_id])parties[r.party_id].members[r.user_id]=Date.parse(r.joined_at);
+ for(const r of ch||[])if(parties[r.party_id])parties[r.party_id].challenges[r.month]={type:r.type,by:r.set_by};S.parties=parties;
+ S.trophies=Object.fromEntries((tr||[]).map(r=>[`${r.party_id}_${r.month}`,{party:r.party_id,partyName:r.party_name,emoji:r.emoji,m:r.month,type:r.type,winners:r.winners||[],score:r.score}]));
+ S.friends=Object.fromEntries((fr||[]).map(r=>[pairId(r.a,r.b),{a:r.a,b:r.b,from:r.from_id,to:r.to_id,status:r.status}]));
+ const chats={};for(const r of (ms||[]).slice().reverse()){const pid=pairId(r.a,r.b);((chats[pid]??={})[r.sender]??=[]).push({id:r.id,t:r.body,at:Date.parse(r.created_at)})}
+ for(const [pid,by] of Object.entries(S.chats))for(const [u,arr] of Object.entries(by))for(const m of arr)if(m.tmp)((chats[pid]??={})[u]??=[]).push(m);S.chats=chats;
+ if(first){const d=us&&us.data;S.priv=d&&typeof d==='object'?{habits:[],logs:{},goals:{},...d}:{habits:[],logs:{},goals:{}};if(S.priv.skin)applySkin(S.priv.skin)}
+ S.loaded.p=true;S.loaded.v=true;ready();return true}
+function scheduleReload(){clearTimeout(reloadTimer);reloadTimer=setTimeout(()=>loadAll(false),500)}
+function subscribeRT(){if(rt){sb.removeChannel(rt);rt=null}if(!S.uid)return;rt=sb.channel('habitor-'+S.uid);
+ for(const t of ['profiles','daily_stats','parties','party_members','challenges','trophies','friendships'])rt.on('postgres_changes',{event:'*',schema:'public',table:t},scheduleReload);
+ rt.on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},p=>{addMsg(p.new);soon()});
+ rt.subscribe()}
+
+/* ---------- derived data ---------- */
+const me=()=>S.profiles[S.uid];
+const priv=()=>S.priv||{habits:[],logs:{},goals:{}};
+const goals=()=>({sleepH:7.5,screenMin:180,bed:'23:30',logAt:'21:00',...(priv().goals||{})});
+const myDays=()=>(S.stats[S.uid]&&S.stats[S.uid].days)||{};
+const WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const wdOf=k=>(parseK(k).getDay()+6)%7;
+const activeOn=(h,k)=>h.repeat==='once'?h.date===k:h.repeat==='days'?Array.isArray(h.days)&&h.days.includes(wdOf(k)):true;
+const daySum=(k,st=priv())=>{const ids=st.habits.filter(h=>activeOn(h,k)).map(h=>h.id);return{done:(st.logs[k]||[]).filter(id=>ids.includes(id)).length,total:ids.length}};
+const perfect=d=>d&&num(d.total)&&d.total>0&&d.done>=d.total;
+const myParties=()=>Object.entries(S.parties).filter(([,p])=>p&&p.members&&p.members[S.uid]).map(([id,p])=>({id,...p})).sort((a,b)=>(a.created||0)-(b.created||0));
+function habitStreak(id){const L=priv().logs,h=priv().habits.find(x=>x.id===id)||{};let k=todayK(),n=0,i=0;if(!(L[k]||[]).includes(id))k=addDays(k,-1);while(i++<3660){if(!activeOn(h,k)){k=addDays(k,-1);continue}if(!(L[k]||[]).includes(id))break;n++;k=addDays(k,-1)}return n}
+function dayStreaks(days){const ks=Object.keys(days||{}).filter(k=>k<=todayK()).sort();let best=0,run=0,prev=null;
+ for(const k of ks){if(perfect(days[k])){run=(prev&&addDays(prev,1)===k)?run+1:1;prev=k;best=Math.max(best,run)}else{run=0;prev=null}}
+ let cur=0,k=todayK();if(!perfect(days[k]))k=addDays(k,-1);while(perfect(days[k])&&cur<3660){cur++;k=addDays(k,-1)}
+ return{best,cur}}
+function score(type,days,m){
+ const ks=monthDays(m).filter(k=>k<=todayK()),list=ks.map(k=>(days&&days[k])||{}),need=Math.min(10,ks.length);
+ if(type==='screen'){const v=list.filter(d=>num(d.screenMin));if(!v.length)return null;const a=v.reduce((s,d)=>s+d.screenMin,0)/v.length;return{v:a,n:v.length,q:v.length>=need,txt:fmtMin(a)+' a day',sub:`${v.length} day${v.length==1?'':'s'} logged`}}
+ if(type==='sleep'){const v=list.filter(d=>num(d.sleepH));if(!v.length)return null;const c=v.filter(d=>d.sleepH>=7.5).length;return{v:c,n:v.length,q:true,txt:`${c} night${c==1?'':'s'}`,sub:`of ${v.length} logged`}}
+ const t=list.filter(d=>num(d.total)&&d.total>0);if(!t.length)return null;const pf=list.map(perfect);
+ if(type==='habits'){const c=pf.filter(Boolean).length;return{v:c,n:t.length,q:true,txt:`${c} perfect day${c==1?'':'s'}`,sub:`${t.length} days tracked`}}
+ let best=0,run=0;pf.forEach(p=>{run=p?run+1:0;best=Math.max(best,run)});return{v:best,n:t.length,q:true,txt:`${best} day${best==1?'':'s'}`,sub:'longest run'}
+}
+function board(p,m){
+ const c=p.challenges&&p.challenges[m];if(!c||!CH[c.type])return null;const lower=CH[c.type].lower;
+ const rows=Object.keys(p.members||{}).map(uid=>({uid,s:score(c.type,S.stats[uid]&&S.stats[uid].days,m)}));
+ rows.sort((a,b)=>{if(!a.s||!b.s)return a.s?-1:b.s?1:0;if(a.s.q!==b.s.q)return a.s.q?-1:1;const d=lower?a.s.v-b.s.v:b.s.v-a.s.v;return Math.abs(d)>1e-9?d:b.s.n-a.s.n});
+ let rank=0,prev=null;rows.forEach((r,i)=>{if(!r.s){r.rank=null;return}const key=r.s.q+'|'+r.s.v.toFixed(3)+'|'+r.s.n;if(key!==prev){rank=i+1;prev=key}r.rank=rank});
+ return{c,rows};
+}
+const monthEnd=m=>monthDays(m).at(-1);
+const awardDay=m=>addDays(monthEnd(m),3);
+const closed=m=>todayK()>=awardDay(m);
+const trophiesOf=uid=>Object.entries(S.trophies).map(([id,t])=>({id,...t})).filter(t=>Array.isArray(t.winners)&&t.winners.includes(uid)).sort((a,b)=>String(b.m).localeCompare(String(a.m)));
+function awardCheck(){
+ if(!S.ready||S.readonly)return;
+ for(const p of myParties())for(const m of Object.keys(p.challenges||{})){
+  if(!closed(m))continue;const tid=`${p.id}_${m}`;if(S.trophies[tid])continue;
+  const b=board(p,m);if(!b)continue;const w=b.rows.filter(r=>r.rank===1).map(r=>r.uid);if(!w.length)continue;
+  const t={party:p.id,partyName:p.name||'Party',emoji:p.emoji||'🏆',m,type:b.c.type,winners:w,score:b.rows[0].s.txt,at:Date.now()};
+  S.trophies={...S.trophies,[tid]:t};write('trophy',()=>sb.from('trophies').insert({party_id:p.id,month:m,party_name:t.partyName,emoji:t.emoji,type:t.type,winners:w,score:t.score}).then(r=>r.error&&r.error.code==='23505'?{}:r));
+ }
+}
+
+/* ---------- writes ---------- */
+function savePriv(next){
+ S.priv=next;S.privPending++;render();const snap=clone(next),uid=S.uid;
+ write('state',()=>sb.from('user_state').upsert({user_id:uid,data:snap,updated_at:new Date().toISOString()})).finally(()=>{S.privPending--});
+}
+function pushDay(k,extra){
+ const s=daySum(k),patch={done:s.done,total:s.total,...(extra||{})},uid=S.uid;
+ const cur=S.stats[uid]||{days:{}};S.stats={...S.stats,[uid]:{...cur,days:{...(cur.days||{}),[k]:{...((cur.days||{})[k]||{}),...patch}}}};
+ write('day-'+k,()=>sb.from('daily_stats').upsert({user_id:uid,day:k,...dayToRow(patch),updated_at:new Date().toISOString()},{onConflict:'user_id,day'}));render();
+}
+
+/* ---------- small UI helpers ---------- */
+let tt;function toast(m){clearTimeout(tt);let t=$('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=m;tt=setTimeout(()=>t.remove(),3200)}
+const cup=(s=56)=>`<svg viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true"><path d="M18 12H9v4a10 10 0 0 0 10 10M46 12h9v4a10 10 0 0 1-10 10" fill="none" stroke="var(--gold)" stroke-width="4"/><path d="M17 7h30v15a15 15 0 0 1-30 0z" fill="var(--gold)"/><path d="M23 11v10a9 9 0 0 0 5 8" stroke="#fff" stroke-opacity=".55" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="29" y="36" width="6" height="9" fill="var(--gold)"/><rect x="19" y="45" width="26" height="9" rx="2" fill="var(--goldk)"/></svg>`;
+const ICON={today:'<path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+ calendar:'<rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+ parties:'<circle cx="8" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16.5" cy="9" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 19c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5M11 19c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+ games:'<rect x="2.5" y="7" width="19" height="11" rx="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 10.5v4M5 12.5h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="15.5" cy="11" r="1.3" fill="currentColor"/><circle cx="18" cy="14" r="1.3" fill="currentColor"/>',
+ friends:'<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+ profile:'<path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5M12 14v4M8 20h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'};
+const check='<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const nameOf=uid=>{const p=S.profiles[uid];return p?(p.name||p.username||'Friend'):'Friend'};
+const avOf=uid=>esc((S.profiles[uid]&&S.profiles[uid].avatar)||'🙂');
+function banners(){
+ let h='';if(S.local)h+=`<div class="note">Preview mode: data is saved in this browser only. Open the shared link while signed in to Claude to sync with friends.</div>`;
+ if(S.readonly)h+=`<div class="note">You can look around, but saving is off. Ask the app's owner to share it with you as an Editor.</div>`;
+ if(S.slow&&!S.ready)h+=`<div class="note">Live data can't be reached yet. Still trying…</div>`;return h;
+}
+
+/* ---------- views ---------- */
+function vToday(){
+ const st=priv(),k=S.day,logs=st.logs[k]||[],d=myDays()[k]||{},g=goals(),ds=daySum(k),pct=ds.total?ds.done/ds.total:0,C=351.86;
+ const chips=[0,-1,-2].map(n=>{const kk=addDays(todayK(),n);return `<button class="chip ${kk===k?'on':''}" data-act="day" data-k="${kk}">${n===0?'Today':n===-1?'Yesterday':esc(dLabel(kk))}</button>`}).join('');
+ const habits=st.habits.filter(h=>activeOn(h,k)).map(h=>{const on=logs.includes(h.id),sk=habitStreak(h.id),info=[h.repeat==='once'?'Just this day':h.repeat==='days'?(h.days||[]).slice().sort().map(d=>WD[d]).join(', '):'Every day',h.time?clock12(h.time):'',h.repeat==='once'?'':(sk?`${sk}-day streak`:'No streak yet')].filter(Boolean).join(' \u00B7 ');return `<div class="habit"><div class="emo">${esc(h.emoji||'•')}</div><div class="sp"><div style="font-weight:600">${esc(h.name)}</div><div class="small mut">${info}</div></div>${S.edit?`<button class="x" data-act="delhabit" data-id="${h.id}" aria-label="Delete ${esc(h.name)}">✕</button>`:`<button class="tick ${on?'on':''}" data-act="toggle" data-id="${h.id}" aria-pressed="${on}" aria-label="${on?'Undo':'Done'}: ${esc(h.name)}">${on?check:''}</button>`}</div>`}).join('');
+ const sl=num(d.sleepH)?d.sleepH:null,sm=num(d.screenMin)?d.screenMin:null;
+ const prev=myDays()[addDays(k,-1)]||{},bed=d.bed||prev.bed||'23:30',wake=d.wake||prev.wake||'07:30',sleepFirst=sl==null&&k===todayK();
+const dn=Math.floor(parseK(k).getTime()/864e5),tip=(t,n)=>TIPS[t][((dn+n)%TIPS[t].length+TIPS[t].length)%TIPS[t].length];
+ const lateBy=d.bed&&clockMins(d.bed)!=null&&clockMins(g.bed)!=null?clockMins(d.bed)-clockMins(g.bed):0,shortBy=sl!=null?Math.round(g.sleepH*60-sl*60):0,overBy=sm!=null?sm-g.screenMin:0;
+ const why=[lateBy>0?`You went to bed ${fmtMin(lateBy)} after your ${esc(clock12(g.bed))} target.`:'',shortBy>0?`You slept ${fmtMin(shortBy)} less than your goal.`:''].filter(Boolean).join(' ');
+ const tipCard=(t,title,reason)=>`<section class="card" style="border-color:var(--co)"><div class="row" style="align-items:flex-start"><div class="sp"><div class="small mut">${title}</div><p style="margin:2px 0 0;font-weight:600">${reason}</p></div></div><p style="margin:10px 0 0">${esc(tip(t,S.tips[t]||0))}</p><div class="btns" style="margin-top:10px"><button class="btn line sm" data-act="tip" data-t="${t}">Another tip</button></div></section>`;
+ const tips=(sl!=null&&why?tipCard('sleep','Sleep tip',why):'')+(overBy>0?tipCard('screen','Screen time tip',`You were on screens ${fmtMin(overBy)} over your ${fmtMin(g.screenMin)} limit.`):'');
+ const sleepCard=`<section class="card"><h2>${sl==null?'How did you sleep?':'Sleep'}</h2><form data-form="sleep"><div class="two"><div><label class="f" for="sb">Went to bed</label><input id="sb" type="time" name="bed" value="${esc(bed)}" required></div><div><label class="f" for="sw">Woke up</label><input id="sw" type="time" name="wake" value="${esc(wake)}" required></div></div>
+ <p style="margin:12px 0 0">You slept <b class="num" id="sdur">${esc(fmtMin(sleepMins(bed,wake)))}</b></p>
+ ${sl!=null?`<div class="meter"><i style="width:${Math.min(100,sl/g.sleepH*100)}%;background:var(--ind)"></i></div><div class="small mut">${sl>=g.sleepH?'Goal met':'Goal'}: ${fmtMin(g.sleepH*60)}</div>`:`<p class="small mut" style="margin:6px 0 0">Your goal is ${fmtMin(g.sleepH*60)}. Times past midnight count as the next morning.</p>`}
+ <div class="btns" style="margin-top:12px"><button class="btn ${sl==null?'':'ghost'}">${sl==null?'Save last night':'Update sleep'}</button></div></form></section>`;
+ return `<header class="top"><div class="in"><h1>Hi ${esc((me()||{}).name||'there')}</h1><p>${esc(dLabel(k))}</p><div class="chips" style="margin-top:14px">${chips}</div></div></header>
+ <main class="wrap lift">${banners()}${sleepFirst?sleepCard:''}
+ <section class="card"><div class="dial"><svg viewBox="0 0 140 140" role="img" aria-label="${ds.done} of ${ds.total} habits done"><circle cx="70" cy="70" r="56" fill="none" stroke="var(--co2)" stroke-width="14"/><circle cx="70" cy="70" r="56" fill="none" stroke="var(--co)" stroke-width="14" stroke-linecap="round" stroke-opacity="${pct?1:0}" stroke-dasharray="${(pct*C).toFixed(1)} ${C}" transform="rotate(-90 70 70)"/><text x="70" y="80" text-anchor="middle" style="font-family:var(--fd)" font-weight="800" font-size="30" fill="currentColor">${Math.round(pct*100)}%</text></svg>
+ <div><div class="num big">${ds.done}/${ds.total}</div><div class="mut">habits done${ds.total&&ds.done>=ds.total?' — perfect day!':''}</div><div class="small mut" style="margin-top:8px">Sleep ${sl!=null?fmtMin(sl*60):'not logged'} · Screens ${sm!=null?fmtMin(sm):'not logged'}</div></div></div></section>${tips}${tips?'<p class="small mut" style="margin:-6px 4px 14px">General tips, not medical advice. If poor sleep goes on for weeks, talk to a doctor.</p>':''}
+ <section class="card"><div class="row"><h2 class="sp" style="margin:0">Habits</h2>${st.habits.length?`<button class="btn line sm" data-act="edit">${S.edit?'Done':'Edit'}</button>`:''}</div>
+ <div style="margin-top:6px">${(()=>{const off=st.habits.filter(h=>h.repeat==='days'&&!activeOn(h,k));return off.length?`<p class="small mut" style="margin:0 0 6px">Not on this day: ${off.map(h=>esc(h.name)+' ('+(h.days||[]).map(d=>WD[d]).join(', ')+')').join(' \u00B7 ')}</p>`:''})()}${habits||'<div class="empty">Add your first habit below — drink water, read 20 min, no phone in bed…</div>'}</div>
+ <form class="add" data-form="addhabit"><input type="text" name="emoji" maxlength="4" placeholder="📚" aria-label="Habit emoji"><input type="text" name="name" maxlength="40" placeholder="New habit" aria-label="Habit name" required><button class="btn">Add</button>
+ <div class="two" style="grid-column:1/-1"><div><label class="f" for="ht" style="margin-top:4px">What time? <span class="mut small">(optional)</span></label><input id="ht" type="time" name="time"></div><div><label class="f" for="hr" style="margin-top:4px">How often?</label><select id="hr" name="repeat"><option value="daily">Every day</option><option value="days">Specific days</option><option value="once">Just ${k===todayK()?'today':esc(dLabel(k))}</option></select></div></div>
+ <fieldset id="hdays" class="days" style="grid-column:1/-1;display:none"><legend class="small" style="font-weight:600;padding:0">Tick the days</legend>${WD.map((d,i)=>`<label><input type="checkbox" name="day" value="${i}"><span>${d}</span></label>`).join('')}</fieldset>
+ <p class="small mut" style="grid-column:1/-1;margin:0">Add a time and Habitor will remind you if it isn't ticked off yet.</p></form></section>
+ ${sleepFirst?'':sleepCard}
+ <section class="card"><h2>Screen time</h2><form data-form="screen"><div class="two"><div><label class="f" for="th">Hours</label><input id="th" type="number" name="hh" min="0" max="24" step="1" value="${sm!=null?Math.floor(sm/60):''}" placeholder="3"></div><div><label class="f" for="tm">Minutes</label><input id="tm" type="number" name="mm" min="0" max="59" step="1" value="${sm!=null?sm%60:''}" placeholder="20"></div></div>
+ ${sm!=null?`<div class="meter"><i style="width:${Math.min(100,sm/g.screenMin*100)}%;background:${sm<=g.screenMin?'var(--ok)':'var(--cor)'}"></i></div><div class="small mut">${sm<=g.screenMin?'Under your goal of':'Over your goal of'} ${fmtMin(g.screenMin)}</div>`:`<p class="small mut" style="margin:8px 0 0">Copy today's total from Screen Time (iPhone) or Digital Wellbeing (Android).</p>`}
+ <div class="btns" style="margin-top:12px"><button class="btn ghost">Save screen time</button></div></form></section></main>`;
+}
+function vCal(){
+ const m=S.calM,days=myDays(),g=goals(),first=parseK(m+'-01'),lead=(first.getDay()+6)%7,t=todayK();
+ let cells=['M','T','W','T','F','S','S'].map(x=>`<div class="h">${x}</div>`).join('')+'<div></div>'.repeat(lead);
+ for(const k of monthDays(m)){const d=days[k]||{},a=d.total?Math.min(1,d.done/d.total):0,fut=k>t;
+  const dots=(num(d.sleepH)&&d.sleepH>=g.sleepH?'<i style="background:var(--ind)"></i>':'')+(num(d.screenMin)&&d.screenMin<=g.screenMin?'<i style="background:var(--cor)"></i>':'')+(evs().some(e=>e.date===k)?'<i style="background:var(--gold);outline:1px solid var(--goldk)"></i>':'');
+  cells+=`<button class="cell ${a>.55?'hi':''} ${k===S.calSel?'sel':''} ${fut?'fut':''}" style="--a:${(a*.9).toFixed(2)}" data-act="calday" data-k="${k}" aria-label="${esc(dLabel(k))}"><span>${+k.slice(8)}</span><span class="dots">${dots}</span></button>`}
+ const sel=S.calSel&&S.calSel.slice(0,7)===m?S.calSel:null;let det='';
+ if(sel&&sel<=t){const d=days[sel]||{},st=priv(),act=st.habits.filter(h=>activeOn(h,sel)),done=act.filter(h=>(st.logs[sel]||[]).includes(h.id)),miss=act.filter(h=>!(st.logs[sel]||[]).includes(h.id));
+  det=`<section class="card"><h2>${esc(dLabel(sel))}</h2><div class="small mut">Habits</div><p style="margin:4px 0 10px">${done.length?done.map(h=>esc((h.emoji||'')+' '+h.name)).join(', '):'None ticked'}${miss.length&&done.length?`<br><span class="mut small">Missed: ${miss.map(h=>esc(h.name)).join(', ')}</span>`:''}</p>
+  <div class="two"><div><div class="small mut">Sleep</div><div class="num" style="font-size:22px">${num(d.sleepH)?fmtMin(d.sleepH*60):'—'}</div>${d.bed?`<div class="small mut">${esc(d.bed)}${d.wake?' to '+esc(d.wake):''}</div>`:''}</div><div><div class="small mut">Screen time</div><div class="num" style="font-size:22px">${num(d.screenMin)?fmtMin(d.screenMin):'—'}</div></div></div></section>`}
+ const s=dayStreaks(days);
+ return `<header class="top"><div class="in"><h1>My calendar</h1><p>Current streak ${s.cur} perfect day${s.cur==1?'':'s'} · best ${s.best}</p></div></header>
+ <main class="wrap lift">${banners()}<section class="card"><div class="row" style="margin-bottom:12px"><button class="btn line sm" data-act="calm" data-n="-1" aria-label="Previous month">‹</button><h2 class="sp" style="text-align:center;margin:0">${mLabel(m)}</h2><button class="btn line sm" data-act="calm" data-n="1" aria-label="Next month">›</button></div>
+ <div class="cal">${cells}</div><div class="legend"><span><i style="background:var(--co)"></i>Habits done (darker = more)</span><span><i style="background:var(--ind)"></i>Sleep goal met</span><span><i style="background:var(--cor)"></i>Screen goal met</span><span><i style="background:var(--gold)"></i>Reminder</span></div></section>${remCard(sel)}${det}${upcomingCard()}</main>`;
+}
+function lbHTML(p,m){
+ const b=board(p,m);if(!b)return '';
+ return `<ul class="lb">${b.rows.map(r=>`<li class="${r.uid===S.uid?'me':''}" data-act="profile" data-uid="${esc(r.uid)}" tabindex="0" role="button"><span class="rk ${r.rank===1?'g':''}">${r.rank??'–'}</span><span class="av">${avOf(r.uid)}</span><span class="sp"><b>${esc(nameOf(r.uid))}${r.uid===S.uid?' (you)':''}</b><br><span class="small mut">@${esc((S.profiles[r.uid]||{}).username||'')}</span></span><span class="sc">${r.s?`<b>${esc(r.s.txt)}</b><span class="small mut">${esc(r.s.sub)}${r.s.q?'':' · needs 10 days'}</span>`:'<span class="small mut">No entries yet</span>'}</span></li>`).join('')}</ul>`;
+}
+function vParties(){
+ const ps=myParties();
+ if(S.party&&S.parties[S.party]&&S.parties[S.party].members&&S.parties[S.party].members[S.uid])return vParty(S.party);
+ const list=ps.map(p=>{const m=curM(),b=board(p,m),mine=b&&b.rows.find(r=>r.uid===S.uid);return `<button class="pcard" data-act="openparty" data-id="${esc(p.id)}"><span class="pe">${esc(p.emoji||'🎉')}</span><span class="sp"><b>${esc(p.name)}</b><br><span class="small mut">${Object.keys(p.members||{}).length} member${Object.keys(p.members||{}).length==1?'':'s'} · ${b?esc(CH[b.c.type].name):'No challenge this month'}</span></span>${mine&&mine.rank?`<span class="rk ${mine.rank===1?'g':''}">${mine.rank}</span>`:''}</button>`}).join('');
+ return `<header class="top"><div class="in"><h1>Parties</h1><p>Challenge your friends. The month's winner takes the trophy.</p></div></header>
+ <main class="wrap lift">${banners()}${list||`<section class="card empty">${cup(64)}<p>You're not in a party yet. Start one and share the code, or join with a friend's code.</p></section>`}
+ <div class="btns"><button class="btn" data-act="modal" data-k="newparty">Create a party</button><button class="btn ghost" data-act="modal" data-k="join">Join with a code</button></div></main>`;
+}
+function vParty(id){
+ const p={id,...S.parties[id]},m=curM(),host=p.host===S.uid,c=p.challenges&&p.challenges[m],day=+todayK().slice(8),left=monthDays(m).length-day;
+ const canPick=host&&(!c||day<=7);
+ const picker=canPick?`<section class="card"><h2>${c?'Change':'Pick'} this month's challenge</h2><p class="small mut" style="margin-top:-4px">As host you can change it until the 7th.</p><div class="chs">${Object.entries(CH).map(([k,v])=>`<button class="cho ${c&&c.type===k?'on':''}" data-act="pick" data-t="${k}"><span class="sp"><b>${v.name}</b><br><span class="small mut">${v.rule}</span></span></button>`).join('')}</div></section>`:'';
+ const past=Object.entries(S.trophies).filter(([,t])=>t.party===id).sort((a,b)=>String(b[1].m).localeCompare(String(a[1].m))).map(([,t])=>`<li style="cursor:default"><span>${cup(36)}</span><span class="sp"><b>${esc(mLabel(t.m))}</b><br><span class="small mut">${esc((CH[t.type]||{}).name||'')}</span></span><span class="sc"><b>${(t.winners||[]).map(u=>esc(nameOf(u))).join(' & ')}</b><span class="small mut">${esc(t.score||'')}</span></span></li>`).join('');
+ return `<header class="top"><div class="in"><button class="chip" data-act="back" style="margin-bottom:12px">‹ All parties</button><h1>${esc(p.emoji||'')} ${esc(p.name)}</h1><p>${Object.keys(p.members||{}).length} member${Object.keys(p.members||{}).length==1?'':'s'} · hosted by ${esc(nameOf(p.host))}</p></div></header>
+ <main class="wrap lift">${banners()}
+ <section class="card"><div class="row"><div class="sp"><div class="small mut">${esc(mLabel(m))} challenge</div><h2 style="margin:2px 0 0">${c?esc(CH[c.type].name):'Not picked yet'}</h2></div>${cup(48)}</div>
+ ${c?`<p class="small mut" style="margin:6px 0 12px">${esc(CH[c.type].rule)}. ${left} day${left==1?'':'s'} left · trophy awarded ${esc(dLabel(awardDay(m)))}.</p>${lbHTML(p,m)}`:`<p class="mut">${host?'Pick a challenge below to start the leaderboard.':'Waiting for the host to pick this month\'s challenge.'}</p>`}</section>
+ ${picker}
+ <section class="card"><h2>Invite friends</h2><div class="row"><span class="code sp">${esc(p.code)}</span><button class="btn ghost sm" data-act="copy" data-code="${esc(p.code)}">Copy code</button></div><p class="small mut" style="margin:8px 0 0">Friends open this app, tap Parties › Join with a code.</p></section>
+ <section class="card"><h2>Past winners</h2>${past?`<ul class="lb">${past}</ul>`:'<div class="empty small">No finished challenges yet.</div>'}</section>
+ <button class="btn danger" data-act="leave" data-id="${esc(id)}">Leave party</button></main>`;
+}
+function trophyGrid(uid){
+ const t=trophiesOf(uid);
+ return t.length?`<div class="trophies">${t.map(x=>`<div class="tro">${cup(56)}<b>${esc((CH[x.type]||{}).name||'Champion')}</b><span class="small mut">${esc(mLabel(x.m))}<br>${esc(x.emoji||'')} ${esc(x.partyName||'')}</span></div>`).join('')}</div>`:`<div class="empty">${cup(48)}<p style="margin:6px 0 0">No trophies yet. Win a monthly challenge to fill this shelf.</p></div>`;
+}
+function vProfile(){
+ const p=me()||{},s=dayStreaks(myDays()),g=goals();
+ return `<header class="top" style="text-align:center;padding-bottom:64px"><div class="in"><div class="av xl" style="margin:0 auto 10px">${esc(p.avatar||'🙂')}</div><h1>${esc(p.name)}</h1><p>@${esc(p.username)}</p></div></header>
+ <main class="wrap lift">${banners()}<section class="card"><p style="margin:0 0 14px;white-space:pre-wrap">${p.bio?esc(p.bio):'<span class="mut">No bio yet.</span>'}</p>
+ <div class="stats3"><div><span class="num">${trophiesOf(S.uid).length}</span><span class="small mut">trophies</span></div><div><span class="num">${myParties().length}</span><span class="small mut">parties</span></div><div><span class="num">${s.best}</span><span class="small mut">best streak</span></div></div>
+ <div class="btns" style="margin-top:14px"><button class="btn line sm" data-act="modal" data-k="editprofile">Edit profile</button></div></section>
+ <section class="card"><h2>Trophy cabinet</h2>${trophyGrid(S.uid)}</section>
+ <section class="card"><h2>App style</h2><p class="small mut" style="margin:-4px 0 12px">Pick the look you like. Only you see your choice.</p><div class="skins">${SKINS.map(([k,n,d,c])=>`<button class="skin ${curSkin()===k?'on':''}" data-act="skin" data-k="${k}" aria-pressed="${curSkin()===k}"><span class="sw">${c.map(x=>`<i style="background:${x}"></i>`).join('')}</span><b>${n}</b><span class="small mut">${d}</span></button>`).join('')}</div></section>
+ <section class="card"><h2>My goals</h2><form data-form="goals"><div class="two"><div><label class="f" for="gb">Bedtime target</label><input id="gb" type="time" name="bed" value="${esc(g.bed)}"></div><div><label class="f" for="gl">Screen-time check-in</label><input id="gl" type="time" name="logAt" value="${esc(g.logAt||'')}"></div></div><p class="small mut" style="margin:6px 0 0">Each evening at this time, Habitor asks you to log today's screen time. Clear it to turn the check-in off.</p><div class="two"><div><label class="f" for="gs">Sleep (hours)</label><input id="gs" type="number" name="sleep" min="4" max="12" step="0.25" value="${g.sleepH}"></div><div><label class="f" for="gt">Screen time max (min)</label><input id="gt" type="number" name="screen" min="15" max="1440" step="15" value="${g.screenMin}"></div></div><div class="btns" style="margin-top:12px"><button class="btn ghost">Save goals</button></div></form>
+ <p class="small mut" style="margin:10px 0 0">Goals are personal. Party challenges use the same rules for everyone.</p></section>
+ <button class="btn danger" data-act="logout" style="width:100%">Log out</button></main>`;
+}
+function profileForm(p,first,isNew){
+ p=p||{};const av=p.avatar||AV[0];
+ return `<form data-form="profile" ${isNew?'data-new="1"':''}><label class="f">Pick an avatar</label><div class="avpick">${AV.map(a=>`<label><input type="radio" name="avatar" value="${a}" ${a===av?'checked':''}><span>${a}</span></label>`).join('')}</div>
+ <label class="f" for="pn">Display name <span class="mut small">(doesn't have to be unique)</span></label><input id="pn" type="text" name="name" maxlength="30" value="${esc(p.name||'')}" required>
+ <label class="f" for="pu">Username</label><input id="pu" type="text" name="username" maxlength="20" value="${esc(p.username||'')}" placeholder="letters, numbers, _" required autocapitalize="none" autocomplete="off"><div id="uhint" class="small" role="status" style="margin-top:6px"></div>
+ <label class="f" for="pb">Bio <span class="mut small">(150 characters)</span></label><textarea id="pb" name="bio" maxlength="150" placeholder="Trying to sleep before midnight. Mostly failing.">${esc(p.bio||'')}</textarea>
+ ${first?'<label class="f" for="pe">Email</label><input id="pe" type="email" name="email" required autocapitalize="none" autocomplete="email" placeholder="you@example.com">':''}
+ <label class="f" for="ppw">${first?'Password <span class="mut small">(at least 6 characters)</span>':'New password <span class="mut small">(leave blank to keep it)</span>'}</label><input id="ppw" type="password" name="pw" minlength="6" ${first?'required':''} autocomplete="new-password">
+ <div class="err" id="perr"></div><div class="btns" style="margin-top:16px"><button class="btn">${first?'Create my account':'Save profile'}</button>${first&&!isNew?'':'<button type="button" class="btn line" data-act="close">Cancel</button>'}</div></form>`;
+}
+function vOnboard(){
+ return `<header class="top"><div class="in"><h1>Welcome to Habitor</h1><p>Track habits, sleep and screen time, then challenge your friends for a monthly trophy.</p></div></header>
+ <main class="wrap lift">${banners()}<section class="card"><h2>Already have an account?</h2><p class="mut" style="margin:-4px 0 12px">Log in with your email and password.</p><button class="btn" data-act="loginexisting" style="width:100%">Log in</button></section>
+ <section class="card"><h2>New here? Create an account</h2>${profileForm(null,true)}</section></main>`;
+}
+function vModal(){
+ const M=S.modal;if(!M)return '';let body='';
+ if(M.k==='newparty')body=`<h2>Create a party</h2><p class="mut">You'll be the host and pick the monthly challenge.</p><form data-form="newparty"><label class="f" for="np">Party name</label><input id="np" type="text" name="name" maxlength="30" placeholder="Night Owls" required>
+  <label class="f">Icon</label><div class="avpick">${PE.map((e,i)=>`<label><input type="radio" name="emoji" value="${e}" ${i?'':'checked'}><span>${e}</span></label>`).join('')}</div>
+  <label class="f" for="nc">This month's challenge</label><select id="nc" name="type">${Object.entries(CH).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('')}</select>
+  <div class="btns" style="margin-top:16px"><button class="btn">Create party</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
+ if(M.k==='join')body=`<h2>Join a party</h2><p class="mut">Ask a friend for their 6-character party code.</p><form data-form="join"><label class="f" for="jc">Party code</label><input id="jc" type="text" name="code" maxlength="6" class="code" autocapitalize="characters" required><div class="err" id="jerr"></div>
+  <div class="btns" style="margin-top:16px"><button class="btn">Join</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
+ if(M.k==='logout')body=`<h2>Log out of Habitor?</h2><p class="mut">Your habits, parties and trophies stay saved. Log back in any time to pick up where you left off.</p><div class="btns" style="margin-top:16px"><button class="btn danger" data-act="dologout">Log out</button><button class="btn ghost" data-act="other">Use another account</button><button class="btn line" data-act="close">Cancel</button></div>`;
+ if(M.k==='other')body=otherModal(M.login);
+ if(M.k==='confirm')body=`<h2>Check your email</h2><p class="mut">We sent a link to <b>${esc(M.email)}</b>. Open it to confirm your account, then come back and log in.</p><div class="btns" style="margin-top:16px"><button class="btn" data-act="loginexisting">Log in</button><button class="btn line" data-act="close">Close</button></div>`;
+ if(M.k==='scrlog'){const g=goals();body=`<div style="text-align:center"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5" fill="none" stroke="var(--co)" stroke-width="2"/><path d="M10.5 18.5h3" stroke="var(--co)" stroke-width="2" stroke-linecap="round"/></svg><h2 style="margin-top:6px">How much screen time today?</h2><p class="mut" style="margin:4px 0 0">Check Screen Time (iPhone) or Digital Wellbeing (Android), then enter today's total. Your limit is ${fmtMin(g.screenMin)}.</p></div>
+  <form data-form="scrlog"><div class="two"><div><label class="f" for="sh2">Hours</label><input id="sh2" type="number" name="hh" min="0" max="24" placeholder="3" required></div><div><label class="f" for="sm2">Minutes</label><input id="sm2" type="number" name="mm" min="0" max="59" placeholder="20"></div></div>
+  <div class="btns" style="margin-top:14px"><button class="btn">Save screen time</button><button type="button" class="btn line" data-act="scrsnooze">In 30 minutes</button><button type="button" class="btn line" data-act="scrskip">Not today</button></div></form>`}
+ if(M.k==='hremind'){const logs=priv().logs[todayK()]||[],hs=priv().habits.filter(h=>M.ids.includes(h.id));body=`<div style="text-align:center"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="var(--co)" stroke-width="2"/><path d="M12 9v4l2.5 2M4 5l3-2M20 5l-3-2" fill="none" stroke="var(--co)" stroke-width="2" stroke-linecap="round"/></svg><h2 style="margin-top:6px">Habit time</h2></div>${hs.map(h=>{const on=logs.includes(h.id);return `<div class="card row" style="margin:10px 0"><div class="emo">${esc(h.emoji||'•')}</div><div class="sp"><b style="font-size:18px">${esc(h.name)}</b><br><span class="mut small">Planned for ${esc(clock12(h.time))}</span></div>${on?'<span class="small" style="color:var(--ok);font-weight:700">Done</span>':`<button class="btn sm" data-act="hdone" data-id="${h.id}">Mark done</button>`}</div>`}).join('')}<div class="btns"><button class="btn line" data-act="close">Got it</button><button class="btn line" data-act="hsnooze">Remind me in 10 minutes</button></div>`}
+ if(M.k==='remind'){const now=Date.now();body=`<div style="text-align:center"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="var(--co)" stroke-width="2"/><path d="M12 9v4l2.5 2M4 5l3-2M20 5l-3-2" fill="none" stroke="var(--co)" stroke-width="2" stroke-linecap="round"/></svg><h2 style="margin-top:6px">Reminder</h2></div>${M.list.map(e=>`<div class="card" style="margin:10px 0"><b style="font-size:18px">${esc(e.title)}</b><br><span class="mut">${evTs(e)<now-3600000?'Was ':''}${esc(dLabel(e.date))} at ${esc(clock12(e.time))}</span></div>`).join('')}<div class="btns"><button class="btn" data-act="close">Got it</button><button class="btn line" data-act="snooze">Remind me in 10 minutes</button></div>`}
+ if(M.k==='newacct')body=`<h2>Create a new account</h2><p class="mut">Pick a username nobody else has. You'll need the password to log in on other devices.</p>${profileForm(null,true,true)}`;
+ if(M.k==='save'){const p=S.profiles[M.id]||{};body=`<h2>Save this account?</h2><p class="mut">Save @${esc(p.username||'')} on this device so you can switch to it from the log out screen without a password.</p><div class="btns" style="margin-top:16px"><button class="btn" data-act="saveyes">Save account</button><button class="btn line" data-act="saveno">Not now</button></div>`}
+ if(M.k==='editprofile')body=`<h2>Edit profile</h2>${profileForm(me(),false)}`;
+ if(M.k==='profile'){const p=S.profiles[M.uid]||{},shared=myParties().filter(x=>x.members&&x.members[M.uid]).map(x=>esc((x.emoji||'')+' '+x.name)).join(', ');
+  body=`<div style="text-align:center"><div class="av xl" style="margin:0 auto 10px;border-color:var(--co2)">${esc(p.avatar||'🙂')}</div><h2>${esc(p.name||'Friend')}</h2><p class="mut" style="margin:0">@${esc(p.username||'')}</p></div>
+  <p style="white-space:pre-wrap;text-align:center">${p.bio?esc(p.bio):'<span class="mut">No bio yet.</span>'}</p>${shared?`<p class="small mut" style="text-align:center">Parties together: ${shared}</p>`:''}
+  <h3>Trophy cabinet</h3>${trophyGrid(M.uid)}<div class="btns" style="margin-top:16px">${M.uid!==S.uid?relButton(M.uid):''}${M.uid!==S.uid&&rel(M.uid)==='friends'?`<button class="btn danger sm" data-act="funfriend" data-uid="${esc(M.uid)}">${M.confirm?'Tap again to remove':'Remove friend'}</button>`:''}<button class="btn line sm" data-act="close">Close</button></div>`}
+ return `<div class="ov" data-act="ovclose"><div class="sheet" role="dialog" aria-modal="true">${body}</div></div>`;
+}
+/* ---------- mini games ---------- */
+const GAMES=[['chess','Chess','Classic chess. Checkmate the king.',1],['checkers','Checkers','Jump and capture every piece. Captures are compulsory.',1],['c4','Connect Four','Drop discs and line up four in a row.',1],['ttt','Tic-tac-toe','Three in a row. Quick to play.',1],['memory','Memory match','Find all 8 pairs in as few tries as you can.',0]];
+const onB=(r,c)=>r>=0&&r<8&&c>=0&&c<8;
+let gid=0;
+/* chess */
+const KN=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]],KG=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]],RD=[[1,0],[-1,0],[0,1],[0,-1]],BD=[[1,1],[1,-1],[-1,1],[-1,-1]];
+const GLYPH={K:'♚',Q:'♛',R:'♜',B:'♝',N:'♞',P:'♟'};
+function chessNew(mode){const init='rnbqkbnrpppppppp'+' '.repeat(32)+'PPPPPPPPRNBQKBNR';return{kind:'chess',mode,id:++gid,b:[...init].map(ch=>ch===' '?null:(ch===ch.toUpperCase()?'w':'b')+ch.toUpperCase()),turn:'w',cs:{wK:1,wQ:1,bK:1,bQ:1},ep:null,sel:null,last:null,over:null}}
+function attacked(b,sq,by){const r=sq>>3,c=sq&7,pr=by==='w'?r+1:r-1;
+ for(const dc of[-1,1])if(onB(pr,c+dc)&&b[pr*8+c+dc]===by+'P')return true;
+ for(const[dr,dc]of KN)if(onB(r+dr,c+dc)&&b[(r+dr)*8+c+dc]===by+'N')return true;
+ for(const[dr,dc]of KG)if(onB(r+dr,c+dc)&&b[(r+dr)*8+c+dc]===by+'K')return true;
+ for(const[ds,kinds]of[[RD,'RQ'],[BD,'BQ']])for(const[dr,dc]of ds){let rr=r+dr,cc=c+dc;while(onB(rr,cc)){const p=b[rr*8+cc];if(p){if(p[0]===by&&kinds.includes(p[1]))return true;break}rr+=dr;cc+=dc}}
+ return false}
+function chessPseudo(s,col){const b=s.b,ms=[],opp=col==='w'?'b':'w';
+ for(let i=0;i<64;i++){const p=b[i];if(!p||p[0]!==col)continue;const r=i>>3,c=i&7,t=p[1],add=(to,x)=>ms.push({f:i,t:to,...(x||{})});
+  if(t==='P'){const d=col==='w'?-1:1,start=col==='w'?6:1,r1=r+d;
+   if(onB(r1,c)&&!b[r1*8+c]){add(r1*8+c);if(r===start&&!b[(r+2*d)*8+c])add((r+2*d)*8+c,{dbl:1})}
+   for(const dc of[-1,1]){const cc=c+dc;if(!onB(r1,cc))continue;const to=r1*8+cc;if(b[to]&&b[to][0]===opp)add(to);else if(s.ep===to)add(to,{ep:1})}}
+  else if(t==='N'||t==='K'){for(const[dr,dc]of t==='N'?KN:KG){const rr=r+dr,cc=c+dc;if(onB(rr,cc)&&(!b[rr*8+cc]||b[rr*8+cc][0]===opp))add(rr*8+cc)}
+   if(t==='K'&&i===(col==='w'?60:4)&&!attacked(b,i,opp)){
+    if(s.cs[col+'K']&&!b[i+1]&&!b[i+2]&&b[i+3]===col+'R'&&!attacked(b,i+1,opp)&&!attacked(b,i+2,opp))add(i+2,{castle:'K'});
+    if(s.cs[col+'Q']&&!b[i-1]&&!b[i-2]&&!b[i-3]&&b[i-4]===col+'R'&&!attacked(b,i-1,opp)&&!attacked(b,i-2,opp))add(i-2,{castle:'Q'})}}
+  else{for(const[dr,dc]of t==='R'?RD:t==='B'?BD:[...RD,...BD]){let rr=r+dr,cc=c+dc;while(onB(rr,cc)){const q=b[rr*8+cc];if(!q)add(rr*8+cc);else{if(q[0]===opp)add(rr*8+cc);break}rr+=dr;cc+=dc}}}}
+ return ms}
+function chessApply(s,m){const b=s.b.slice(),p=b[m.f],col=p[0];b[m.t]=p;b[m.f]=null;
+ if(m.ep)b[m.t+(col==='w'?8:-8)]=null;
+ if(p[1]==='P'&&(m.t<8||m.t>=56))b[m.t]=col+'Q';
+ if(m.castle==='K'){b[m.f+1]=b[m.f+3];b[m.f+3]=null}if(m.castle==='Q'){b[m.f-1]=b[m.f-4];b[m.f-4]=null}
+ const cs={...s.cs};if(p[1]==='K'){cs[col+'K']=0;cs[col+'Q']=0}
+ for(const[sq,k]of[[63,'wK'],[56,'wQ'],[7,'bK'],[0,'bQ']])if(m.f===sq||m.t===sq)cs[k]=0;
+ return{...s,b,cs,turn:col==='w'?'b':'w',ep:m.dbl?(m.f+m.t)/2:null,sel:null,last:[m.f,m.t]}}
+function chessLegal(s){const col=s.turn,opp=col==='w'?'b':'w';return chessPseudo(s,col).filter(m=>{const n=chessApply(s,m);return !attacked(n.b,n.b.indexOf(col+'K'),opp)})}
+const inCheck=s=>attacked(s.b,s.b.indexOf(s.turn+'K'),s.turn==='w'?'b':'w');
+const VAL={P:1,N:3,B:3.2,R:5,Q:9,K:0};
+function chessEval(b,col){let v=0;b.forEach((p,i)=>{if(!p)return;const r=i>>3,c=i&7,cen=((3.5-Math.abs(3.5-c))+(3.5-Math.abs(3.5-r)))*0.03;const x=VAL[p[1]]+(p[1]==='P'||p[1]==='N'?cen:0);v+=p[0]===col?x:-x});return v}
+function chessAI(s){const col=s.turn;let best=null,bv=-1e9;
+ for(const m of chessLegal(s)){const n=chessApply(s,m),rep=chessLegal(n);let v;
+  if(!rep.length)v=inCheck(n)?1e6:-2;else{v=1e9;for(const r of rep){const e=chessEval(chessApply(n,r).b,col);if(e<v)v=e}}
+  v+=Math.random()*0.2;if(v>bv){bv=v;best=m}}
+ return best}
+/* checkers */
+function ckNew(mode){const b=Array(64).fill(null);for(let i=0;i<64;i++){const r=i>>3,c=i&7;if((r+c)%2){if(r<3)b[i]='b';if(r>4)b[i]='w'}}return{kind:'checkers',mode,id:++gid,b,turn:'w',sel:null,chain:null,last:null,over:null}}
+function ckMoves(s,col){const b=s.b,caps=[],steps=[];
+ for(let i=0;i<64;i++){const p=b[i];if(!p||p.toLowerCase()!==col)continue;if(s.chain!=null&&i!==s.chain)continue;const r=i>>3,c=i&7,king=p!==p.toLowerCase();
+  for(const[dr,dc]of king?BD:col==='w'?[[-1,-1],[-1,1]]:[[1,-1],[1,1]]){const r1=r+dr,c1=c+dc,r2=r+2*dr,c2=c+2*dc;if(!onB(r1,c1))continue;const q=b[r1*8+c1];
+   if(!q)steps.push({f:i,t:r1*8+c1});else if(q.toLowerCase()!==col&&onB(r2,c2)&&!b[r2*8+c2])caps.push({f:i,t:r2*8+c2,x:r1*8+c1})}}
+ return caps.length?caps:(s.chain!=null?[]:steps)}
+function ckApply(s,m){const b=s.b.slice();let p=b[m.f],crowned=false;b[m.f]=null;
+ if((p==='w'&&m.t<8)||(p==='b'&&m.t>=56)){p=p.toUpperCase();crowned=true}b[m.t]=p;
+ if(m.x!=null){b[m.x]=null;const n={...s,b,chain:m.t,last:[m.f,m.t]};if(!crowned&&ckMoves(n,p.toLowerCase()).some(k=>k.x!=null))return{...n,sel:m.t}}
+ return{...s,b,chain:null,sel:null,turn:s.turn==='w'?'b':'w',last:[m.f,m.t]}}
+function ckAI(s){let best=null,bv=-1e9;for(const m of ckMoves(s,s.turn)){let v=Math.random();if(m.x!=null)v+=10;if(s.b[m.f]==='b'&&m.t>=56)v+=5;
+ const n=ckApply(s,m);if(n.turn!==s.turn&&ckMoves(n,n.turn).some(o=>o.x===m.t))v-=4;if(v>bv){bv=v;best=m}}return best}
+/* connect four (7 x 6) */
+const c4New=mode=>({kind:'c4',mode,id:++gid,b:Array(42).fill(null),turn:'r',over:null,win:[],last:null});
+function c4Drop(b,c){for(let r=5;r>=0;r--)if(!b[r*7+c])return r*7+c;return -1}
+function c4Line(b){for(let i=0;i<42;i++){const p=b[i];if(!p)continue;const r=Math.floor(i/7),c=i%7;
+ for(const[dr,dc]of[[0,1],[1,0],[1,1],[1,-1]]){const cells=[i];for(let k=1;k<4;k++){const rr=r+dr*k,cc=c+dc*k;if(rr<0||rr>5||cc<0||cc>6||b[rr*7+cc]!==p)break;cells.push(rr*7+cc)}if(cells.length===4)return cells}}return null}
+function c4AI(s){const me=s.turn,op=me==='r'?'y':'r',cols=[3,2,4,1,5,0,6].filter(c=>c4Drop(s.b,c)>=0);
+ const winsWith=(b,c,p)=>{const i=c4Drop(b,c);if(i<0)return false;const n=b.slice();n[i]=p;return !!c4Line(n)};
+ for(const c of cols)if(winsWith(s.b,c,me))return c;for(const c of cols)if(winsWith(s.b,c,op))return c;
+ const safe=cols.filter(c=>{const n=s.b.slice();n[c4Drop(n,c)]=me;return !winsWith(n,c,op)});const pool=safe.length?safe:cols;
+ return Math.random()<0.75?pool[0]:pool[Math.floor(Math.random()*pool.length)]}
+/* tic-tac-toe */
+const tttNew=mode=>({kind:'ttt',mode,id:++gid,b:Array(9).fill(null),turn:'X',over:null,win:[]});
+const TL=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const tttLine=b=>TL.find(l=>b[l[0]]&&b[l[0]]===b[l[1]]&&b[l[0]]===b[l[2]])||null;
+function tttMini(b,p){const l=tttLine(b);if(l)return{s:b[l[0]]==='O'?1:-1};const free=b.map((v,i)=>v?null:i).filter(i=>i!=null);if(!free.length)return{s:0};
+ let best={s:p==='O'?-2:2};for(const i of free){const n=b.slice();n[i]=p;const r=tttMini(n,p==='O'?'X':'O');if(p==='O'?r.s>best.s:r.s<best.s)best={s:r.s,i}}return best}
+function tttAI(s){const free=s.b.map((v,i)=>v?null:i).filter(i=>i!=null);return Math.random()<0.15?free[Math.floor(Math.random()*free.length)]:tttMini(s.b,'O').i}
+/* memory */
+function memNew(){const sy=['★','●','▲','■','◆','♥','♣','♠'],d=[...sy,...sy];for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]]}
+ return{kind:'memory',mode:'solo',id:++gid,cards:d.map(s=>({s,up:false,done:false})),open:[],tries:0,over:null,lock:false}}
+/* game flow */
+const NEW={chess:chessNew,checkers:ckNew,c4:c4New,ttt:tttNew,memory:memNew};
+const aiTurn=s=>s.mode==='ai'&&!s.over&&((s.kind==='chess'||s.kind==='checkers')?s.turn==='b':s.kind==='c4'?s.turn==='y':s.kind==='ttt'?s.turn==='O':false);
+function gameStatus(s){
+ if(s.kind==='chess'){if(chessLegal(s).length)return null;return inCheck(s)?(s.turn==='w'?'Black':'White')+' wins by checkmate':'Stalemate, it’s a draw'}
+ if(s.kind==='checkers'){if(ckMoves(s,s.turn).length)return null;return(s.turn==='w'?'Black':'White')+' wins'}
+ if(s.kind==='c4'){if(s.win.length)return(s.turn==='r'?'Yellow':'Red')+' wins';return s.b.every(Boolean)?'Board full, it’s a draw':null}
+ if(s.kind==='ttt'){if(s.win.length)return(s.turn==='X'?'O':'X')+' wins';return s.b.every(Boolean)?'It’s a draw':null}
+ return null}
+function afterMove(){const s=S.game;s.over=gameStatus(s);render();if(aiTurn(s)){const id=s.id;setTimeout(()=>{if(!S.game||S.game.id!==id)return;aiStep()},420)}}
+function aiStep(){const s=S.game;
+ if(s.kind==='chess'){const m=chessAI(s);if(m)S.game=chessApply(s,m)}
+ else if(s.kind==='checkers'){const m=ckAI(s);if(m)S.game=ckApply(s,m)}
+ else if(s.kind==='c4')c4Play(c4AI(s));
+ else if(s.kind==='ttt')tttPlay(tttAI(s));
+ if(S.game.kind==='chess'||S.game.kind==='checkers')afterMove()}
+function c4Play(c){const s=S.game,i=c4Drop(s.b,c);if(i<0)return;const b=s.b.slice();b[i]=s.turn;S.game={...s,b,last:i,win:c4Line(b)||[],turn:s.turn==='r'?'y':'r'};afterMove()}
+function tttPlay(i){const s=S.game;if(s.b[i])return;const b=s.b.slice();b[i]=s.turn;S.game={...s,b,win:tttLine(b)||[],turn:s.turn==='X'?'O':'X'};afterMove()}
+function gameClick(el){const s=S.game;if(!s||s.over)return;if(aiTurn(s))return;
+ if(s.kind==='chess'){const i=+el.dataset.i,p=s.b[i];if(s.sel!=null){const m=chessLegal(s).find(m=>m.f===s.sel&&m.t===i);if(m){S.game=chessApply(s,m);afterMove();return}}S.game={...s,sel:p&&p[0]===s.turn?i:null};render()}
+ else if(s.kind==='checkers'){const i=+el.dataset.i,ms=ckMoves(s,s.turn);if(s.sel!=null){const m=ms.find(m=>m.f===s.sel&&m.t===i);if(m){S.game=ckApply(s,m);afterMove();return}}if(s.chain!=null)return;
+  const own=s.b[i]&&s.b[i].toLowerCase()===s.turn;if(own&&!ms.some(m=>m.f===i)&&ms.some(m=>m.x!=null))toast('You have to capture when you can');S.game={...s,sel:ms.some(m=>m.f===i)?i:null};render()}
+ else if(s.kind==='c4')c4Play(+el.dataset.c);
+ else if(s.kind==='ttt')tttPlay(+el.dataset.i);
+ else if(s.kind==='memory'){const i=+el.dataset.i,c=s.cards[i];if(s.lock||c.up||c.done)return;const cards=s.cards.map(x=>({...x}));cards[i].up=true;const open=[...s.open,i];
+  if(open.length===2){const[a,b]=open,tries=s.tries+1;if(cards[a].s===cards[b].s){cards[a].done=cards[b].done=true;const over=cards.every(x=>x.done)?`All pairs found in ${tries} tries`:null;S.game={...s,cards,open:[],tries,over};render()}
+   else{const id=s.id;S.game={...s,cards,open,tries,lock:true};render();setTimeout(()=>{if(!S.game||S.game.id!==id)return;S.game={...S.game,cards:S.game.cards.map((x,k)=>open.includes(k)?{...x,up:false}:x),open:[],lock:false};render()},750)}}
+  else{S.game={...s,cards,open};render()}}}
+function gameLine(s){
+ if(s.over)return s.over;const two=s.mode==='2p';
+ if(s.kind==='chess')return(s.mode==='ai'?(s.turn==='w'?'Your move (White)':'Computer is thinking…'):(s.turn==='w'?'White to move':'Black to move'))+(inCheck(s)?' · Check!':'');
+ if(s.kind==='checkers')return s.chain!=null?'Keep jumping!':s.mode==='ai'?(s.turn==='w'?'Your move (White)':'Computer is thinking…'):(s.turn==='w'?'White to move':'Black to move');
+ if(s.kind==='c4')return s.mode==='ai'?(s.turn==='r'?'Your turn (Red)':'Computer is thinking…'):(s.turn==='r'?'Red to play':'Yellow to play');
+ if(s.kind==='ttt')return s.mode==='ai'?(s.turn==='X'?'Your turn (X)':'Computer is thinking…'):(s.turn+' to play');
+ return `Tries: ${s.tries}`}
+function boardHTML(s){
+ if(s.kind==='chess'||s.kind==='checkers'){const targets=new Set();
+  if(s.sel!=null)(s.kind==='chess'?chessLegal(s):ckMoves(s,s.turn)).filter(m=>m.f===s.sel).forEach(m=>targets.add(m.t));
+  let h='<div class="board b8">';for(let i=0;i<64;i++){const r=i>>3,c=i&7,dark=(r+c)%2,p=s.b[i],cls=['sq',dark?'d':'l',s.sel===i?'sel':'',s.last&&s.last.includes(i)?'last':'',targets.has(i)?(p?'cap':'dot'):''].join(' ');
+   let inner='';if(p&&s.kind==='chess')inner=`<span class="pc ${p[0]}">${GLYPH[p[1]]}︎</span>`;
+   if(p&&s.kind==='checkers')inner=`<span class="ck ${p.toLowerCase()}">${p!==p.toLowerCase()?'♛︎':''}</span>`;
+   h+=`<button class="${cls}" data-act="gsq" data-i="${i}" aria-label="Square ${'abcdefgh'[c]}${8-r}">${inner}</button>`}return h+'</div>'}
+ if(s.kind==='c4'){let h='<div class="board c4">';for(let i=0;i<42;i++){const p=s.b[i];h+=`<button class="hole" data-act="gsq" data-c="${i%7}" aria-label="Column ${i%7+1}"><span class="disc ${p||''} ${s.win.includes(i)?'win':''}"></span></button>`}return h+'</div>'}
+ if(s.kind==='ttt')return '<div class="board t3">'+s.b.map((v,i)=>`<button class="tcell ${s.win.includes(i)?'win':''}" data-act="gsq" data-i="${i}" aria-label="Cell ${i+1}">${v||''}</button>`).join('')+'</div>';
+ return '<div class="board mem">'+s.cards.map((c,i)=>`<button class="card2 ${c.up||c.done?'up':''} ${c.done?'done':''}" data-act="gsq" data-i="${i}" aria-label="Card ${i+1}">${c.up||c.done?c.s:''}</button>`).join('')+'</div>';
+}
+function vGames(){
+ if(S.game){const s=S.game,g=GAMES.find(x=>x[0]===s.kind);
+  return `<header class="top"><div class="in"><button class="chip" data-act="gquit" style="margin-bottom:12px">‹ All games</button><h1>${g[1]}</h1><p>${s.mode==='ai'?'You vs computer':s.mode==='2p'?'2 players, pass the phone':'Solo'}</p></div></header>
+  <main class="wrap lift"><section class="card"><p class="gline" role="status" style="margin:0 0 12px;font-weight:700;font-size:18px">${esc(gameLine(s))}</p>${boardHTML(s)}
+  <div class="btns" style="margin-top:14px"><button class="btn" data-act="grestart">New game</button><button class="btn line" data-act="gquit">Exit</button></div></section></main>`}
+ return `<header class="top"><div class="in"><h1>Games</h1><p>Quick games for a break. Play the computer or pass the phone to a friend.</p></div></header>
+ <main class="wrap lift">${GAMES.map(([k,n,d,two])=>`<section class="card"><h2>${n}</h2><p class="mut" style="margin:-4px 0 12px">${d}</p><div class="btns"><button class="btn sm" data-act="gstart" data-g="${k}" data-m="${two?'ai':'solo'}">${two?'Play the computer':'Play'}</button>${two?`<button class="btn ghost sm" data-act="gstart" data-g="${k}" data-m="2p">2 players</button>`:''}</div></section>`).join('')}
+ <p class="small mut" style="text-align:center">Games count as screen time too. Play a round, then put the phone down.</p></main>`;
+}
+
+/* ---------- friends & chat ---------- */
+const pairId=(a,b)=>a<b?a+'+'+b:b+'+'+a;
+const otherOf=f=>f.a===S.uid?f.b:f.a;
+function rel(uid){const f=S.friends[pairId(S.uid,uid)];if(!f)return 'none';if(f.status==='accepted')return 'friends';return f.from===S.uid?'sent':'received'}
+let readMap={};try{readMap=JSON.parse(localStorage.getItem('habitor-read')||'{}')||{}}catch(e){}
+function markRead(pid){readMap[pid]=Date.now();try{localStorage.setItem('habitor-read',JSON.stringify(readMap))}catch(e){}}
+function chatMsgs(pid){const by=S.chats[pid]||{};const all=[];for(const [uid,ms] of Object.entries(by))for(const m of (ms||[]))if(m&&typeof m.t==='string')all.push({...m,f:uid});return all.sort((x,y)=>(x.at||0)-(y.at||0))}
+const unread=pid=>chatMsgs(pid).filter(m=>m.f!==S.uid&&(m.at||0)>(readMap[pid]||0)).length;
+const myFriends=()=>Object.entries(S.friends).filter(([,f])=>f&&f.status==='accepted'&&(f.a===S.uid||f.b===S.uid)).map(([id,f])=>({id,uid:otherOf(f),...f}));
+const incoming=()=>Object.entries(S.friends).filter(([,f])=>f&&f.status==='pending'&&f.to===S.uid).map(([id,f])=>({id,uid:f.from,...f}));
+const outgoing=()=>Object.entries(S.friends).filter(([,f])=>f&&f.status==='pending'&&f.from===S.uid).map(([id,f])=>({id,uid:f.to,...f}));
+const friendBadge=()=>incoming().length+myFriends().reduce((n,f)=>n+unread(f.id),0);
+const chatSubs={};
+function syncChatSubs(){}
+function relButton(uid){const r=rel(uid);
+ if(r==='friends')return `<button class="btn ghost sm" data-act="fchat" data-uid="${esc(uid)}">Message</button>`;
+ if(r==='sent')return `<button class="btn line sm" data-act="fcancel" data-uid="${esc(uid)}">Requested · Cancel</button>`;
+ if(r==='received')return `<button class="btn sm" data-act="faccept" data-uid="${esc(uid)}">Accept</button>`;
+ return `<button class="btn sm" data-act="fadd" data-uid="${esc(uid)}">Add friend</button>`}
+const personRow=(uid,right,sub)=>`<div class="row" style="padding:10px 0;border-top:1px solid var(--line)"><button class="av" data-act="profile" data-uid="${esc(uid)}" aria-label="View ${esc(nameOf(uid))}'s profile" style="border:0">${avOf(uid)}</button><div class="sp"><b>${esc(nameOf(uid))}</b><br><span class="small mut">${sub||'@'+esc((S.profiles[uid]||{}).username||'')}</span></div>${right}</div>`;
+function searchHTML(){const q=(S.fq||'').trim().toLowerCase().replace(/^@/,'');if(q.length<2)return '<p class="small mut" style="margin:10px 0 0">Type at least 2 letters of a display name or username.</p>';
+ const hits=Object.entries(S.profiles).filter(([id,p])=>id!==S.uid&&p&&(String(p.name||'').toLowerCase().includes(q)||String(p.username||'').toLowerCase().includes(q))).slice(0,12);
+ return hits.length?hits.map(([id])=>personRow(id,relButton(id))).join(''):'<p class="small mut" style="margin:10px 0 0">No one found with that name.</p>'}
+function msgsHTML(pid){const ms=chatMsgs(pid);if(!ms.length)return `<div class="empty">Say hi to ${esc(nameOf(S.chat))}!</div>`;
+ return ms.map(m=>`<div class="bub ${m.f===S.uid?'me':'them'}"><span>${esc(m.t)}</span><time>${new Date(m.at||0).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</time></div>`).join('')}
+function vFriends(){
+ if(S.chat&&rel(S.chat)==='friends'){const uid=S.chat,pid=pairId(S.uid,uid);markRead(pid);
+  return `<header class="top" style="padding-bottom:20px"><div class="in"><button class="chip" data-act="fback" style="margin-bottom:12px">‹ Friends</button><div class="row"><button class="av" data-act="profile" data-uid="${esc(uid)}" style="border:0" aria-label="View profile">${avOf(uid)}</button><div class="sp"><h1 style="font-size:26px">${esc(nameOf(uid))}</h1><p style="margin:0">@${esc((S.profiles[uid]||{}).username||'')}</p></div></div></div></header>
+  <main class="wrap" style="padding-bottom:170px">${banners()}<div class="msgs" id="msgs">${msgsHTML(pid)}</div></main>
+  <form class="composer" data-form="chat"><input id="chatin" type="text" name="t" maxlength="1000" placeholder="Message ${esc(nameOf(uid))}" autocomplete="off" aria-label="Message"><button class="btn" aria-label="Send">Send</button></form>`}
+ const inc=incoming(),out=outgoing(),fr=myFriends().map(f=>({...f,ms:chatMsgs(f.id)})).sort((x,y)=>((y.ms.at(-1)||{}).at||0)-((x.ms.at(-1)||{}).at||0));
+ return `<header class="top"><div class="in"><h1>Friends</h1><p>Find friends by display name or username, then chat in the app.</p></div></header>
+ <main class="wrap lift">${banners()}
+ <section class="card"><h2>Find friends</h2><input id="fq" type="search" placeholder="Search name or @username" value="${esc(S.fq||'')}" aria-label="Search for friends" autocomplete="off"><div id="fres">${searchHTML()}</div></section>
+ ${inc.length?`<section class="card"><h2>Friend requests (${inc.length})</h2>${inc.map(f=>personRow(f.uid,`<div class="btns"><button class="btn sm" data-act="faccept" data-uid="${esc(f.uid)}">Accept</button><button class="btn line sm" data-act="fdecline" data-uid="${esc(f.uid)}">Decline</button></div>`,'wants to be friends')).join('')}</section>`:''}
+ ${out.length?`<section class="card"><h2>Sent requests</h2>${out.map(f=>personRow(f.uid,`<button class="btn line sm" data-act="fcancel" data-uid="${esc(f.uid)}">Cancel</button>`,'Waiting for them to accept')).join('')}</section>`:''}
+ <section class="card"><h2>My friends</h2>${fr.length?fr.map(f=>{const last=f.ms.at(-1),u=unread(f.id);return `<button class="frow" data-act="fchat" data-uid="${esc(f.uid)}"><span class="av">${avOf(f.uid)}</span><span class="sp"><b>${esc(nameOf(f.uid))}</b><br><span class="small mut">${last?esc((last.f===S.uid?'You: ':'')+last.t).slice(0,60):'No messages yet'}</span></span>${u?`<span class="badge">${u}</span>`:''}</button>`}).join(''):'<div class="empty">No friends yet. Search for someone above and send a request.</div>'}</section>
+ <p class="small mut" style="text-align:center">Messages are private between you and your friend.</p></main>`;
+}
+async function friendAct(a,uid){const pid=pairId(S.uid,uid),f=S.friends[pid],[pa,pb]=pid.split('+'),key='f-'+pid;
+ if(a==='fadd'){if(f&&f.status==='pending'&&f.to===S.uid)return friendAct('faccept',uid);const d={a:pa,b:pb,from:S.uid,to:uid,status:'pending'};S.friends={...S.friends,[pid]:d};render();write(key,()=>sb.from('friendships').insert({a:pa,b:pb,from_id:S.uid,to_id:uid}));toast('Friend request sent')}
+ else if(a==='faccept'){if(!f)return;S.friends={...S.friends,[pid]:{...f,status:'accepted'}};render();write(key,()=>sb.from('friendships').update({status:'accepted',accepted_at:new Date().toISOString()}).eq('a',pa).eq('b',pb));toast(`You and ${nameOf(uid)} are now friends`)}
+ else if(a==='fdecline'||a==='fcancel'||a==='funfriend'){const n={...S.friends};delete n[pid];S.friends=n;if(a==='funfriend'){S.chat=null;S.modal=null}render();write(key,()=>sb.from('friendships').delete().eq('a',pa).eq('b',pb));toast(a==='fdecline'?'Request declined':a==='fcancel'?'Request cancelled':'Friend removed')}
+}
+
+const U_RE=/^[a-z0-9_]{3,20}$/;
+const takenBy=u=>{const hit=Object.entries(S.profiles).find(([,p])=>p&&p.username===u);return hit?hit[0]:null};
+let uTimer=null,uSeq=0;
+function uHint(raw){const u=String(raw||'').trim().toLowerCase().replace(/^@/,'');if(!u)return['',''];if(!U_RE.test(u))return['3–20 letters, numbers or underscores.','bad'];
+ if(S.uid){const t=takenBy(u);if(t&&t!==S.uid)return[`@${u} is already taken.`,'bad'];return[t===S.uid?`@${u} is yours.`:`@${u} is available.`,'ok']}
+ clearTimeout(uTimer);const seq=++uSeq;uTimer=setTimeout(async()=>{const {data,error}=await sb.rpc('username_available',{u});if(seq!==uSeq)return;const h=$('#uhint');if(!h||error)return;h.textContent=data?`@${u} is available.`:`@${u} is already taken.`;h.className='small hint-'+(data?'ok':'bad')},350);
+ return['Checking…','']}
+/* ---------- accounts on this device ---------- */
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const saved=()=>{const v=LS.get('habitor-sessions',{});return v&&typeof v==='object'?v:{}};
+const setSaved=v=>LS.set('habitor-sessions',v);
+const savedAccts=()=>Object.keys(saved());
+async function rememberCurrent(){const {data}=await sb.auth.getSession();const s=data&&data.session;if(!s)return;const sv=saved(),p=S.profiles[s.user.id]||{};
+ sv[s.user.id]={rt:s.refresh_token,at:s.access_token,email:s.user.email,name:p.name||'',username:p.username||'',avatar:p.avatar||'🙂'};setSaved(sv);LS.set('habitor-active',s.user.id)}
+async function updateSavedInfo(){const sv=saved();if(!S.uid||!sv[S.uid])return;const p=me()||{};Object.assign(sv[S.uid],{name:p.name||'',username:p.username||'',avatar:p.avatar||'🙂'});setSaved(sv)}
+function resetView(){S.game=null;S.chat=null;S.party=null;S.tab='today';S.modal=null;S.edit=false;S.chats={};S.priv=null;S.profiles={};S.stats={};S.parties={};S.trophies={};S.friends={};S.loaded={p:false,v:false}}
+async function enter(uid){S.uid=uid;S.out=false;try{localStorage.removeItem('habitor-signed-out')}catch(e){}resetView();S.ready=false;render();
+ const ok=await loadAll(true);subscribeRT();S.ready=true;if(!ok){render();return}updateSavedInfo();render();scrollTo(0,0)}
+async function switchTo(id){const sv=saved(),s=sv[id];if(!s)return;
+ if(S.uid&&sv[S.uid])await rememberCurrent();
+ const {data,error}=await sb.auth.setSession({access_token:s.at,refresh_token:s.rt});
+ if(error||!data.session){delete sv[id];setSaved(sv);toast('That login has expired. Please log in again.');S.modal={k:'other',login:true};render();return}
+ LS.set('habitor-active',id);await rememberCurrent();await enter(data.session.user.id)}
+async function afterLogin(session){const had=savedAccts().length>0,known=!!saved()[session.user.id];
+ if(!had||known){await enter(session.user.id);await rememberCurrent();return}
+ await enter(session.user.id);S.modal={k:'save',id:session.user.id};render()}
+const acctRow=(id,s,cur)=>`<div class="row" style="border-top:1px solid var(--line)"><button class="frow sp" style="border:0" data-act="swacct" data-id="${esc(id)}"><span class="av">${esc(s.avatar||'🙂')}</span><span class="sp"><b>${esc(s.name||s.email||'Account')}</b><br><span class="small mut">${s.username?'@'+esc(s.username)+' · ':''}${esc(s.email||'')}</span></span></button><button class="x" data-act="forget" data-id="${esc(id)}" aria-label="Remove ${esc(s.name||'account')} from this device">✕</button></div>`;
+function vOut(){const sv=saved(),ids=Object.keys(sv);
+ return `<main class="wrap" style="padding-top:48px"><div style="text-align:center"><div class="num" style="font-size:40px;color:var(--co-ink)">Habitor</div><p class="mut" style="margin:6px 0 22px">You're logged out. Choose an account.</p></div>
+ <section class="card"><h2>Accounts on this device</h2>${ids.length?ids.map(id=>acctRow(id,sv[id])).join(''):'<div class="empty">No saved accounts yet.</div>'}</section>
+ <button class="btn" data-act="other" style="width:100%">Use another account</button></main>`}
+function otherModal(login){return `<h2>${login?'Log in':'Use another account'}</h2><p class="mut">${login?'Enter the email and password of your Habitor account.':'Log in with your email and password, or create a new account.'}</p>
+ <form data-form="login"><label class="f" for="lu">Email</label><input id="lu" type="email" name="email" required autocapitalize="none" autocomplete="email" placeholder="you@example.com">
+ <label class="f" for="lp">Password</label><input id="lp" type="password" name="pw" required autocomplete="current-password"><div class="err" id="lerr"></div>
+ <div class="btns" style="margin-top:14px"><button class="btn">Log in</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>
+ ${login?'':'<hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><p style="margin:0 0 10px;font-weight:600">New to Habitor?</p><button class="btn ghost" data-act="newacct" style="width:100%">Create a new account</button>'}`}
+
+/* ---------- reminders ---------- */
+const evs=()=>Array.isArray(priv().events)?priv().events:[];
+const evTs=e=>{const [y,mo,d]=e.date.split('-').map(Number),[h,mi]=(e.time||'09:00').split(':').map(Number);return new Date(y,mo-1,d,h,mi).getTime()};
+const dueAt=e=>e.snooze||evTs(e)-(e.before||0)*60000;
+const BEFORE=[[0,'At the time'],[10,'10 minutes before'],[30,'30 minutes before'],[60,'1 hour before'],[1440,'1 day before']];
+const evLine=e=>`${esc(e.title)} · ${esc(dLabel(e.date))}, ${esc(clock12(e.time))}`;
+function remCard(sel){if(!sel)return '';const list=evs().filter(e=>e.date===sel).sort((a,b)=>a.time.localeCompare(b.time));
+ return `<section class="card"><h2>Reminders for ${esc(dLabel(sel))}</h2>${list.length?list.map(e=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--line)"><div class="sp"><b>${esc(clock12(e.time))}</b> · ${esc(e.title)}<br><span class="small mut">${esc((BEFORE.find(x=>x[0]===(e.before||0))||BEFORE[0])[1])}${e.fired?' · reminded':''}</span></div><button class="x" data-act="evdel" data-id="${e.id}" aria-label="Delete reminder ${esc(e.title)}">✕</button></div>`).join(''):'<p class="small mut" style="margin:0 0 4px">Nothing planned yet.</p>'}
+ <form data-form="event" style="margin-top:10px"><label class="f" for="et">What's happening?</label><input id="et" type="text" name="title" maxlength="80" placeholder="Dentist, football practice, call Grandma…" required>
+ <div class="two"><div><label class="f" for="eh">Time</label><input id="eh" type="time" name="time" value="09:00" required></div><div><label class="f" for="eb">Remind me</label><select id="eb" name="before">${BEFORE.map(([v,l])=>`<option value="${v}" ${v===10?'selected':''}>${l}</option>`).join('')}</select></div></div>
+ <div class="btns" style="margin-top:12px"><button class="btn">Add reminder</button></div></form>
+ ${notifCanAsk()?'<button class="btn line sm" data-act="notifon" style="margin-top:12px">Also show phone notifications</button>':''}
+ <p class="small mut" style="margin:10px 0 0">Habitor reminds you while the app is open, or as soon as you next open it.</p></section>`}
+function upcomingCard(){const now=Date.now(),up=evs().filter(e=>evTs(e)>=now).sort((a,b)=>evTs(a)-evTs(b)).slice(0,5);if(!up.length)return '';
+ return `<section class="card"><h2>Coming up</h2>${up.map(e=>`<button class="frow" data-act="calday" data-k="${e.date}" style="min-height:48px"><span class="sp">${evLine(e)}</span></button>`).join('')}</section>`}
+const notifCanAsk=()=>{try{return 'Notification' in window&&Notification.permission==='default'}catch(e){return false}};
+function notify(t,b){try{if('Notification' in window&&Notification.permission==='granted')new Notification(t,{body:b})}catch(e){}}
+function habitDue(){const k=todayK(),now=new Date(),mins=now.getHours()*60+now.getMinutes(),st=priv(),hr=st.hrem||{},logs=st.logs[k]||[];
+ return st.habits.filter(h=>h.time&&activeOn(h,k)&&!logs.includes(h.id)).filter(h=>{const r=hr[h.id]||{};if(r.snooze)return Date.now()>=r.snooze;if(r.d===k)return false;const [hh,mm]=h.time.split(':').map(Number);return mins>=hh*60+mm})}
+function checkHabits(){if(!S.ready||S.out||!S.loaded.v||!me())return;if(S.modal&&S.modal.k!=='hremind')return;const due=habitDue();if(!due.length)return;
+ const st=clone(priv()),k=todayK();st.hrem={...(st.hrem||{})};due.forEach(h=>{st.hrem[h.id]={d:k};notify('Habitor',`Time for: ${h.name}`)});
+ const ids=[...new Set([...((S.modal&&S.modal.ids)||[]),...due.map(h=>h.id)])];S.modal={k:'hremind',ids};savePriv(st)}
+setInterval(checkHabits,20000);
+function checkScreen(){if(!S.ready||S.out||!S.loaded.v||!me()||S.modal)return;const g=goals();if(!g.logAt)return;const k=todayK(),d=myDays()[k]||{};if(num(d.screenMin))return;
+ const p=priv().scrAsk||{};if(p.snooze?Date.now()<p.snooze:p.d===k)return;const now=new Date(),[hh,mm]=g.logAt.split(':').map(Number);if(now.getHours()*60+now.getMinutes()<hh*60+mm)return;
+ if(S.scrShown===k&&!p.snooze)return;S.scrShown=k;notify('Habitor','Time to log today\'s screen time');S.modal={k:'scrlog'};render()}
+setInterval(checkScreen,30000);
+function checkReminders(){setTimeout(checkHabits,0);setTimeout(checkScreen,50);if(!S.ready||S.out||!S.loaded.v||!me())return;const now=Date.now(),due=evs().filter(e=>!e.fired&&dueAt(e)<=now);if(!due.length)return;
+ const st=clone(priv());st.events=evs().map(e=>due.some(d=>d.id===e.id)?{...e,fired:true}:e);
+ const ids=[...new Set([...((S.modal&&S.modal.k==='remind')?S.modal.ids:[]),...due.map(e=>e.id)])];
+ due.forEach(e=>notify('Habitor reminder',`${e.title} at ${clock12(e.time)}`));
+ S.modal={k:'remind',ids,list:st.events.filter(e=>ids.includes(e.id))};savePriv(st)}
+setInterval(checkReminders,20000);
+const curSkin=()=>priv().skin||document.documentElement.dataset.skin||'club';
+function render(){
+ if(S.priv&&S.priv.skin&&S.priv.skin!==document.documentElement.dataset.skin)applySkin(S.priv.skin);
+ if(!S.ready&&!S.slow)return;
+ let h;
+ if(!S.ready){h=`<main class="wrap">${banners()}<div class="load"><p>Loading your club…</p></div></main>`}
+ else if(S.out){h=vOut();$('#app').innerHTML=h;$('#modal').innerHTML=vModal();return}
+ else if(!me())h=vOnboard();
+ else{h=({today:vToday,calendar:vCal,parties:vParties,games:vGames,friends:vFriends,profile:vProfile}[S.tab]||vToday)();
+  h+=`<nav class="tabs" aria-label="Sections"><div class="in">${[['today','Today'],['calendar','Calendar'],['parties','Parties'],['games','Games'],['friends','Friends'],['profile','Profile']].map(([k,l])=>{const bd=k==='friends'?friendBadge():0;return `<button class="${S.tab===k?'on':''}" data-act="tab" data-k="${k}" ${S.tab===k?'aria-current="page"':''} aria-label="${l}${bd?`, ${bd} new`:''}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>${l}${bd?`<span class="tbadge" aria-hidden="true">${bd>9?'9+':bd}</span>`:''}</button>`}).join('')}</div></nav>`}
+ $('#app').innerHTML=h;$('#modal').innerHTML=(me()||(S.modal&&['other','newacct','confirm'].includes(S.modal.k)))?vModal():'';
+ if($('#msgs'))scrollTo(0,document.body.scrollHeight);
+}
+let deferred=false;
+function soon(){const a=document.activeElement;if(a&&a.id==='chatin'&&S.chat){const m=$('#msgs');if(m){m.innerHTML=msgsHTML(pairId(S.uid,S.chat));scrollTo(0,document.body.scrollHeight)}return}if(a&&a.id==='fq'){const r=$('#fres');if(r)r.innerHTML=searchHTML();return}if(a&&a.matches&&a.matches('input[type=text],input[type=number],input[type=time],textarea')&&a.value){deferred=true;return}requestAnimationFrame(render)}
+document.addEventListener('focusout',()=>{if(deferred)setTimeout(()=>{const a=document.activeElement;if(a&&a.matches&&a.matches('input,textarea'))return;deferred=false;render()},400)});
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;
+ if(a==='ovclose'){if(e.target===b){S.modal=null;render()}return}
+ if(S.readonly&&['toggle','delhabit','pick','leave','fadd','faccept','fdecline','fcancel','funfriend'].includes(a)){toast('Saving is off for you.');return}
+ if(a==='tab'){S.tab=b.dataset.k;S.party=null;S.chat=null;S.edit=false;render();scrollTo(0,0)}
+ else if(a==='day'){S.day=b.dataset.k;render()}
+ else if(a==='edit'){S.edit=!S.edit;render()}
+ else if(a==='toggle'){const st=clone(priv()),k=S.day,l=st.logs[k]||[],id=b.dataset.id;st.logs[k]=l.includes(id)?l.filter(x=>x!==id):[...l,id];savePriv(st);pushDay(k)}
+ else if(a==='delhabit'){const st=clone(priv());st.habits=st.habits.filter(h=>h.id!==b.dataset.id);if(!st.habits.length)S.edit=false;savePriv(st);pushDay(todayK())}
+ else if(a==='skin'){const k=b.dataset.k;applySkin(k);const st=clone(priv());st.skin=k;if(S.readonly){render();return}savePriv(st)}
+ else if(a==='tip'){const t=b.dataset.t;S.tips={...S.tips,[t]:(S.tips[t]||0)+1};render()}
+ else if(a==='gstart'){S.game=NEW[b.dataset.g](b.dataset.m);render();scrollTo(0,0)}
+ else if(a==='grestart'){const s=S.game;S.game=NEW[s.kind](s.mode);render()}
+ else if(a==='gquit'){S.game=null;render()}
+ else if(a==='gsq')gameClick(b)
+ else if(a==='logout'){S.modal={k:'logout'};render()}
+ else if(a==='dologout'){S.modal=null;(async()=>{const isSaved=!!saved()[S.uid];if(isSaved)await rememberCurrent();else{await sb.auth.signOut();if(rt){sb.removeChannel(rt);rt=null}}
+  S.out=savedAccts().length>0;if(S.out)try{localStorage.setItem('habitor-signed-out','1')}catch(e){}S.uid=null;resetView();S.ready=true;render();scrollTo(0,0)})()}
+ else if(a==='other'){S.modal={k:'other'};render();setTimeout(()=>{const i=$('#lu');i&&i.focus()},30)}
+ else if(a==='loginexisting'){S.modal={k:'other',login:true};render();setTimeout(()=>{const i=$('#lu');i&&i.focus()},30)}
+ else if(a==='newacct'){S.modal={k:'newacct'};render()}
+ else if(a==='swacct'){switchTo(b.dataset.id)}
+ else if(a==='forget'){const sv=saved();delete sv[b.dataset.id];setSaved(sv);if(LS.get('habitor-active',null)===b.dataset.id)LS.set('habitor-active',null);if(!savedAccts().length)S.out=false;toast('Removed from this device');render()}
+ else if(a==='saveyes'){S.modal=null;rememberCurrent().then(()=>{toast('Account saved on this device');render()})}
+ else if(a==='saveno'){S.modal=null;render()}
+ else if(['fadd','faccept','fdecline','fcancel'].includes(a))friendAct(a,b.dataset.uid)
+ else if(a==='funfriend'){if(S.modal&&S.modal.confirm)friendAct(a,b.dataset.uid);else{S.modal={...S.modal,confirm:true};render()}}
+ else if(a==='fchat'){S.tab='friends';S.chat=b.dataset.uid;S.modal=null;render()}
+ else if(a==='fback'){S.chat=null;render();scrollTo(0,0)}
+ else if(a==='evdel'){const st=clone(priv());st.events=evs().filter(e=>e.id!==b.dataset.id);savePriv(st);toast('Reminder deleted')}
+ else if(a==='snooze'){const ids=(S.modal&&S.modal.ids)||[],st=clone(priv());st.events=evs().map(e=>ids.includes(e.id)?{...e,fired:false,snooze:Date.now()+600000}:e);S.modal=null;savePriv(st);toast('I\'ll remind you in 10 minutes')}
+ else if(a==='notifon'){try{Notification.requestPermission().then(p=>{toast(p==='granted'?'Notifications are on':'Notifications are off. Reminders will still show inside Habitor.');render()}).catch(()=>toast('This browser can\'t show notifications here. Reminders will show inside Habitor.'))}catch(e){toast('This browser can\'t show notifications here. Reminders will show inside Habitor.')}}
+ else if(a==='hdone'){const st=clone(priv()),k=todayK(),l=st.logs[k]||[];if(!l.includes(b.dataset.id))st.logs[k]=[...l,b.dataset.id];savePriv(st);pushDay(k);const left=(S.modal.ids||[]).filter(id=>!(st.logs[k]||[]).includes(id));if(!left.length)S.modal=null;toast('Nice, ticked off!');render()}
+ else if(a==='hsnooze'){const st=clone(priv()),t=Date.now()+600000;st.hrem={...(st.hrem||{})};(S.modal.ids||[]).forEach(id=>{st.hrem[id]={d:todayK(),snooze:t}});S.modal=null;savePriv(st);toast('I\'ll remind you in 10 minutes')}
+ else if(a==='scrskip'){const st=clone(priv());st.scrAsk={d:todayK()};S.modal=null;savePriv(st)}
+ else if(a==='scrsnooze'){const st=clone(priv());st.scrAsk={d:todayK(),snooze:Date.now()+1800000};S.modal=null;savePriv(st);toast('I\'ll ask again in 30 minutes')}
+ else if(a==='calm'){S.calM=addMonths(S.calM,+b.dataset.n);render()}
+ else if(a==='calday'){S.calSel=b.dataset.k;render()}
+ else if(a==='openparty'){S.party=b.dataset.id;render();scrollTo(0,0)}
+ else if(a==='back'){S.party=null;render()}
+ else if(a==='modal'){S.modal={k:b.dataset.k};render();setTimeout(()=>{const i=$('.sheet input[type=text]');i&&i.focus()},30)}
+ else if(a==='close'){S.modal=null;render()}
+ else if(a==='profile'){S.modal={k:'profile',uid:b.dataset.uid};render()}
+ else if(a==='copy'){const c=b.dataset.code;(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Code copied')).catch(()=>toast('Party code: '+c))}
+ else if(a==='pick'){const id=S.party,m=curM(),v={type:b.dataset.t,by:S.uid,at:Date.now()};S.parties={...S.parties,[id]:deepMerge(S.parties[id],{challenges:{[m]:v}})};render();write('ch-'+id,()=>sb.from('challenges').upsert({party_id:id,month:m,type:v.type,set_by:S.uid,set_at:new Date().toISOString()},{onConflict:'party_id,month'}))}
+ else if(a==='leave'){const id=b.dataset.id,p=clone(S.parties[id]||{});delete p.members[S.uid];if(p.host===S.uid){const rest=Object.entries(p.members).sort((x,y)=>x[1]-y[1]);if(rest.length)p.host=rest[0][0]}S.parties={...S.parties,[id]:p};S.party=null;render();write('leave',()=>sb.rpc('leave_party',{p:id}));toast('You left the party')}
+});
+document.addEventListener('change',e=>{if(e.target.id==='hr'){const f=$('#hdays');if(f)f.style.display=e.target.value==='days'?'flex':'none'}});
+document.addEventListener('input',e=>{if(e.target.id==='pu'){const h=$('#uhint'),[t,k]=uHint(e.target.value);if(h){h.textContent=t;h.className='small hint-'+k}return}if(e.target.id==='fq'){S.fq=e.target.value;const r=$('#fres');if(r)r.innerHTML=searchHTML();return}if(e.target.id==='sb'||e.target.id==='sw'){const o=$('#sdur');if(o)o.textContent=fmtMin(sleepMins($('#sb').value,$('#sw').value))}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.modal){S.modal=null;render()}if((e.key==='Enter'||e.key===' ')&&e.target.matches('li[data-act]')){e.preventDefault();e.target.click()}});
+document.addEventListener('submit',e=>{
+ const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();const F=new FormData(f),t=f.dataset.form,val=n=>String(F.get(n)||'').trim();
+ if(S.readonly&&t!=='profile'){toast('Saving is off for you.');return}
+ if(t==='addhabit'){const name=val('name');if(!name)return;const time=/^\d{2}:\d{2}$/.test(val('time'))?val('time'):'',rv=val('repeat'),repeat=rv==='once'?'once':rv==='days'?'days':'daily',days=F.getAll('day').map(Number).filter(n=>n>=0&&n<7);if(repeat==='days'&&!days.length){toast('Tick at least one day');return}const h={id:rid(),name,emoji:val('emoji')||'✓',created:Date.now(),repeat,time};if(repeat==='once')h.date=S.day;if(repeat==='days')h.days=[...new Set(days)].sort();const st=clone(priv());st.habits.push(h);deferred=false;savePriv(st);pushDay(S.day);if(S.day!==todayK())pushDay(todayK());if(time)toast(repeat==='once'?`I'll remind you at ${clock12(time)}`:repeat==='days'?`I'll remind you on ${h.days.map(d=>WD[d]).join(', ')} at ${clock12(time)}`:`I'll remind you every day at ${clock12(time)}`)}
+ else if(t==='sleep'){const bed=val('bed'),wake=val('wake'),m=sleepMins(bed,wake);if(!m||m>960){toast('Check your times: sleep must be under 16 hours');return}deferred=false;pushDay(S.day,{sleepH:Math.round(m/60*100)/100,sleepMin:m,bed,wake});toast(`Saved: ${fmtMin(m)} of sleep`)}
+ else if(t==='screen'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}deferred=false;pushDay(S.day,{screenMin:hh*60+mm,src:'manual'});toast('Screen time saved')}
+ else if(t==='chat'){const text=val('t').slice(0,1000);if(!text||!S.chat)return;const pid=pairId(S.uid,S.chat),[pa,pb]=pid.split('+'),tmp={tmp:1,t:text,at:Date.now()},by={...(S.chats[pid]||{})};by[S.uid]=[...(by[S.uid]||[]),tmp];S.chats={...S.chats,[pid]:by};markRead(pid);const i=$('#chatin');if(i)i.value='';const mm=$('#msgs');if(mm){mm.innerHTML=msgsHTML(pid);scrollTo(0,document.body.scrollHeight)}
+  write('msg',()=>sb.from('messages').insert({a:pa,b:pb,sender:S.uid,body:text}).select().single().then(r=>{if(r.data){addMsg(r.data);soon()}return r}))}
+ else if(t==='login'){const email=val('email'),pw=String(F.get('pw')||''),err=$('#lerr'),btn=f.querySelector('button:not([type=button])');
+  if(btn){btn.disabled=true;btn.textContent='Logging in…'}
+  (async()=>{if(S.uid&&saved()[S.uid])await rememberCurrent();const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
+   if(error||!data.session){err.textContent=/confirm/i.test(error&&error.message||'')?'Please confirm your email first, then log in.':'Wrong email or password. Try again.';if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Log in'}return}
+   S.modal=null;await afterLogin(data.session)})()}
+ else if(t==='event'){const title=val('title').slice(0,80),time=val('time'),before=+val('before')||0;if(!title||!/^\d{2}:\d{2}$/.test(time)||!S.calSel)return;
+  const e={id:rid(),date:S.calSel,time,title,before,fired:false};const st=clone(priv());st.events=[...evs(),e].slice(-500);
+  if(dueAt(e)<=Date.now())e.fired=evTs(e)<Date.now();deferred=false;savePriv(st);toast(evTs(e)<Date.now()?'Added (that time has already passed)':dueAt(e)<=Date.now()?'Reminder set':`I'll remind you ${BEFORE.find(x=>x[0]===before)[1].toLowerCase()}`)}
+ else if(t==='scrlog'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}
+  const m=hh*60+mm,g=goals();S.modal=null;deferred=false;pushDay(todayK(),{screenMin:m,src:'manual'});toast(m<=g.screenMin?`Saved ${fmtMin(m)}: under your limit, nice!`:`Saved ${fmtMin(m)}: ${fmtMin(m-g.screenMin)} over your limit. There's a tip on Today.`)}
+ else if(t==='goals'){const s=parseFloat(val('sleep')),sc=parseInt(val('screen'),10);if(!(s>=4&&s<=12&&sc>=15&&sc<=1440)){toast('Check your goals');return}const st=clone(priv());st.goals={sleepH:s,screenMin:sc,bed:val('bed')||'23:30',logAt:/^\d{2}:\d{2}$/.test(val('logAt'))?val('logAt'):''};deferred=false;savePriv(st);toast('Goals saved')}
+ else if(t==='profile'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])'),isNew=!S.uid||f.dataset.new==='1',pw=String(F.get('pw')||''),email=val('email');
+  if(pw&&pw.length<6){err.textContent='Password must be at least 6 characters.';return}
+  if(!name){err.textContent='Add a display name.';return}
+  if(!U_RE.test(u)){err.textContent='Username: 3–20 letters, numbers or underscores.';return}
+  const reset=t=>{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent=t}};
+  if(btn){btn.disabled=true;btn.textContent=isNew?'Creating account…':'Saving…'}err.textContent='';
+  (async()=>{
+   if(isNew){if(!email||!pw){err.textContent='Add your email and a password.';reset('Create my account');return}
+    const av=await sb.rpc('username_available',{u});if(av.error||!av.data){err.textContent=av.error?"Couldn't check the username. Try again.":`@${u} is already taken. Try another username.`;reset('Create my account');return}
+    if(S.uid&&saved()[S.uid])await rememberCurrent();
+    const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:{username:u,name,avatar,bio},emailRedirectTo:location.origin}});
+    if(error){err.textContent=/registered|exists/i.test(error.message)?'That email already has an account. Log in instead.':/database/i.test(error.message)?`@${u} was just taken. Try another username.`:`Couldn't create the account: ${error.message}`;reset('Create my account');return}
+    S.modal=null;if(data.session){await afterLogin(data.session);toast('Welcome to Habitor!')}else{S.modal={k:'confirm',email};render()}return}
+   const {error}=await sb.from('profiles').update({name,username:u,bio,avatar}).eq('id',S.uid);
+   if(error){err.textContent=error.code==='23505'?`@${u} is already taken. Try another username.`:errText(error);reset('Save profile');return}
+   if(pw){const r=await sb.auth.updateUser({password:pw});if(r.error){err.textContent=`Profile saved, but the password wasn't changed: ${r.error.message}`;reset('Save profile');return}}
+   S.profiles={...S.profiles,[S.uid]:{...(me()||{}),name,username:u,bio,avatar}};updateSavedInfo();S.modal=null;deferred=false;render();toast(pw?'Profile and password saved':'Profile saved')})()}
+ else if(t==='newparty'){const name=val('name');if(!name)return;f.querySelector('button.btn').disabled=true;
+  (async()=>{const {data,error}=await sb.rpc('create_party',{p_name:name,p_emoji:val('emoji')||'🎉',p_type:val('type')||'screen'});if(error){toast(errText(error));render();return}
+   S.modal=null;S.tab='parties';await loadAll(false);S.party=data;deferred=false;render()})()}
+ else if(t==='join'){const c=val('code').toUpperCase(),err=$('#jerr'),btn=f.querySelector('button:not([type=button])');if(btn)btn.disabled=true;
+  (async()=>{const {data,error}=await sb.rpc('join_party',{p_code:c});if(error){err.textContent=/full/.test(error.message)?'That party is full (20 members).':/no party/.test(error.message)?'No party with that code. Check it and try again.':errText(error);if(btn)btn.disabled=false;return}
+   S.modal=null;await loadAll(false);S.party=data;deferred=false;render();const p=S.parties[data];toast('Welcome to '+((p&&p.name)||'the party'))})()}
+});
+
+/* ---------- boot ---------- */
+function ready(){setTimeout(checkReminders,0);if(S.loaded.p&&S.loaded.v&&!S.ready){S.ready=true;render()}awardCheck();soon()}
+async function boot(){
+ if(!window.supabase){S.ready=true;S.slow=true;$('#app').innerHTML='<main class="wrap"><div class="load"><p>Habitor couldn\'t load. Check your connection and reload.</p></div></main>';return}
+ sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storage:window.sessionStorage,storageKey:'habitor-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ sb.auth.onAuthStateChange((ev,s)=>{if(s&&(ev==='TOKEN_REFRESHED'||ev==='SIGNED_IN')){const sv=saved();if(sv[s.user.id]){sv[s.user.id].rt=s.refresh_token;sv[s.user.id].at=s.access_token;setSaved(sv)}}});
+ let session=(await sb.auth.getSession()).data.session;
+ if(!session){const act=LS.get('habitor-active',null),sv=saved();if(act&&sv[act]){const r=await sb.auth.setSession({access_token:sv[act].at,refresh_token:sv[act].rt});if(!r.error&&r.data.session)session=r.data.session;else{delete sv[act];setSaved(sv)}}}
+ if(S.out&&!savedAccts().length)S.out=false;
+ if(session&&!S.out)await enter(session.user.id);else{S.ready=true;render()}
+}
+boot();
+
+}
+</script>
+</body>
+</html>

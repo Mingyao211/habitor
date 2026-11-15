@@ -206,7 +206,8 @@ const SKEY='streak-party-skin';
 function applySkin(k){if(!SKINS.some(x=>x[0]===k))k='club';document.documentElement.dataset.skin=k;try{localStorage.setItem(SKEY,k)}catch(e){}}
 try{applySkin(localStorage.getItem(SKEY)||'club')}catch(e){applySkin('club')}
 
-const S={game:null,tips:{},ready:false,local:false,uid:null,tab:'today',day:todayK(),calM:curM(),calSel:todayK(),party:null,modal:null,edit:false,
+let wasOut=false;try{wasOut=localStorage.getItem('habitor-signed-out')==='1'}catch(e){}
+const S={out:wasOut,game:null,tips:{},ready:false,local:false,uid:null,tab:'today',day:todayK(),calM:curM(),calSel:todayK(),party:null,modal:null,edit:false,
  profiles:{},stats:{},parties:{},trophies:{},priv:null,privPending:0,lastPriv:undefined,loaded:{p:false,v:false},slow:false,readonly:false,err:{}};
 
 /* ---------- storage: shared db when available, this browser otherwise ---------- */
@@ -393,7 +394,8 @@ function vProfile(){
  <section class="card"><h2>Trophy cabinet</h2>${trophyGrid(S.uid)}</section>
  <section class="card"><h2>App style</h2><p class="small mut" style="margin:-4px 0 12px">Pick the look you like. Only you see your choice.</p><div class="skins">${SKINS.map(([k,n,d,c])=>`<button class="skin ${curSkin()===k?'on':''}" data-act="skin" data-k="${k}" aria-pressed="${curSkin()===k}"><span class="sw">${c.map(x=>`<i style="background:${x}"></i>`).join('')}</span><b>${n}</b><span class="small mut">${d}</span></button>`).join('')}</div></section>
  <section class="card"><h2>My goals</h2><form data-form="goals"><div class="two"><div><label class="f" for="gb">Bedtime target</label><input id="gb" type="time" name="bed" value="${esc(g.bed)}"></div><div></div></div><div class="two"><div><label class="f" for="gs">Sleep (hours)</label><input id="gs" type="number" name="sleep" min="4" max="12" step="0.25" value="${g.sleepH}"></div><div><label class="f" for="gt">Screen time max (min)</label><input id="gt" type="number" name="screen" min="15" max="1440" step="15" value="${g.screenMin}"></div></div><div class="btns" style="margin-top:12px"><button class="btn ghost">Save goals</button></div></form>
- <p class="small mut" style="margin:10px 0 0">Goals are personal. Party challenges use the same rules for everyone.</p></section></main>`;
+ <p class="small mut" style="margin:10px 0 0">Goals are personal. Party challenges use the same rules for everyone.</p></section>
+ <button class="btn danger" data-act="logout" style="width:100%">Log out</button></main>`;
 }
 function profileForm(p,first){
  p=p||{};const av=p.avatar||AV[0];
@@ -415,6 +417,7 @@ function vModal(){
   <div class="btns" style="margin-top:16px"><button class="btn">Create party</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
  if(M.k==='join')body=`<h2>Join a party</h2><p class="mut">Ask a friend for their 6-character party code.</p><form data-form="join"><label class="f" for="jc">Party code</label><input id="jc" type="text" name="code" maxlength="6" class="code" autocapitalize="characters" required><div class="err" id="jerr"></div>
   <div class="btns" style="margin-top:16px"><button class="btn">Join</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
+ if(M.k==='logout')body=`<h2>Log out of Habitor?</h2><p class="mut">Your habits, parties and trophies stay saved. Log back in any time to pick up where you left off.</p><div class="btns" style="margin-top:16px"><button class="btn danger" data-act="dologout">Log out</button><button class="btn line" data-act="close">Cancel</button></div>`;
  if(M.k==='editprofile')body=`<h2>Edit profile</h2>${profileForm(me(),false)}`;
  if(M.k==='profile'){const p=S.profiles[M.uid]||{},shared=myParties().filter(x=>x.members&&x.members[M.uid]).map(x=>esc((x.emoji||'')+' '+x.name)).join(', ');
   body=`<div style="text-align:center"><div class="av xl" style="margin:0 auto 10px;border-color:var(--co2)">${esc(p.avatar||'🙂')}</div><h2>${esc(p.name||'Friend')}</h2><p class="mut" style="margin:0">@${esc(p.username||'')}</p></div>
@@ -553,11 +556,13 @@ function vGames(){
 }
 
 const curSkin=()=>priv().skin||document.documentElement.dataset.skin||'club';
+function vOut(){const p=me()||{};return `<main class="wrap"><div class="load"><div style="max-width:340px"><div class="av xl" style="margin:0 auto 14px;border-color:var(--co2)">${esc(p.avatar||'🙂')}</div><div class="num" style="font-size:34px;color:var(--ink)">Habitor</div><p style="margin:8px 0 20px">You're logged out${p.username?` of @${esc(p.username)}`:''}.</p><button class="btn" data-act="login" style="width:100%">Log in</button></div></div></main>`}
 function render(){
  if(S.priv&&S.priv.skin&&S.priv.skin!==document.documentElement.dataset.skin)applySkin(S.priv.skin);
  if(!S.ready&&!S.slow)return;
  let h;
  if(!S.ready){h=`<main class="wrap">${banners()}<div class="load"><p>Loading your club…</p></div></main>`}
+ else if(S.out){h=vOut();$('#app').innerHTML=h;$('#modal').innerHTML='';return}
  else if(!me())h=vOnboard();
  else{h=({today:vToday,calendar:vCal,parties:vParties,games:vGames,profile:vProfile}[S.tab]||vToday)();
   h+=`<nav class="tabs" aria-label="Sections"><div class="in">${[['today','Today'],['calendar','Calendar'],['parties','Parties'],['games','Games'],['profile','Profile']].map(([k,l])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-k="${k}" ${S.tab===k?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>${l}</button>`).join('')}</div></nav>`}
@@ -583,6 +588,9 @@ document.addEventListener('click',e=>{
  else if(a==='grestart'){const s=S.game;S.game=NEW[s.kind](s.mode);render()}
  else if(a==='gquit'){S.game=null;render()}
  else if(a==='gsq')gameClick(b)
+ else if(a==='logout'){S.modal={k:'logout'};render()}
+ else if(a==='dologout'){S.out=true;S.modal=null;S.game=null;S.party=null;S.tab='today';try{localStorage.setItem('habitor-signed-out','1')}catch(e){}render();scrollTo(0,0)}
+ else if(a==='login'){S.out=false;try{localStorage.removeItem('habitor-signed-out')}catch(e){}render()}
  else if(a==='calm'){S.calM=addMonths(S.calM,+b.dataset.n);render()}
  else if(a==='calday'){S.calSel=b.dataset.k;render()}
  else if(a==='openparty'){S.party=b.dataset.id;render();scrollTo(0,0)}

@@ -49,7 +49,7 @@ button{cursor:pointer}
 .btn.danger{background:transparent;border:1px solid var(--cor);color:var(--cor)}
 .btn.sm{min-height:40px;padding:8px 14px;border-radius:12px;font-size:15px}
 .btns{display:flex;gap:10px;flex-wrap:wrap}
-input[type=text],input[type=search],input[type=number],input[type=time],textarea,select{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;font-size:16px;min-height:46px}
+input[type=text],input[type=password],input[type=search],input[type=number],input[type=time],textarea,select{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;font-size:16px;min-height:46px}
 textarea{resize:vertical;min-height:80px}
 label.f{display:block;font-size:14px;font-weight:600;margin:12px 0 6px}
 .dial{display:grid;grid-template-columns:140px minmax(0,1fr);gap:16px;align-items:center}
@@ -218,7 +218,7 @@ function applySkin(k){if(!SKINS.some(x=>x[0]===k))k='club';document.documentElem
 try{applySkin(localStorage.getItem(SKEY)||'club')}catch(e){applySkin('club')}
 
 let wasOut=false;try{wasOut=localStorage.getItem('habitor-signed-out')==='1'}catch(e){}
-const S={usernames:{},friends:{},chats:{},chat:null,fq:'',out:wasOut,game:null,tips:{},ready:false,local:false,uid:null,tab:'today',day:todayK(),calM:curM(),calSel:todayK(),party:null,modal:null,edit:false,
+const S={cuid:null,usernames:{},friends:{},chats:{},chat:null,fq:'',out:wasOut,game:null,tips:{},ready:false,local:false,uid:null,tab:'today',day:todayK(),calM:curM(),calSel:todayK(),party:null,modal:null,edit:false,
  profiles:{},stats:{},parties:{},trophies:{},priv:null,privPending:0,lastPriv:undefined,loaded:{p:false,v:false},slow:false,readonly:false,err:{}};
 
 /* ---------- storage: shared db when available, this browser otherwise ---------- */
@@ -235,6 +235,7 @@ function makeLocal(){
   async set(p,v){data[p]=clone(v);save();emit()},
   async merge(p,v){data[p]=deepMerge(data[p]||{},clone(v));save();emit()},
   async del(p){delete data[p];save();emit()},
+  async get(p){return data[p]?clone(data[p]):null},
   async claim(p,uid){const d=data[p];if(d&&d.uid&&d.uid!==uid)return false;data[p]={uid,at:Date.now()};save();emit();return true}};
 }
 function makeRemote(db){
@@ -244,6 +245,7 @@ function makeRemote(db){
   set:(p,v)=>db.doc(p).set(v),
   async merge(p,v){const r=db.doc(p);const s=await r.get();return s.exists?r.update(v):r.set(v)},
   del:p=>db.doc(p).delete(),
+  get:p=>db.doc(p).get().then(s=>s.exists?s.data():null),
   async claim(p,uid){const r=db.doc(p);const l=await r.acquire({holder:uid,ttlMs:5000});if(!l.acquired)return false;const s=await r.get();const d=s.exists?s.data():null;if(d&&d.uid&&d.uid!==uid)return false;if(!d||d.uid!==uid)await r.set({uid,at:Date.now()});return true}};
 }
 const Q={};
@@ -301,7 +303,7 @@ function awardCheck(){
 
 /* ---------- writes ---------- */
 function savePriv(next){
- S.priv=next;S.privPending++;render();const path=`data/users/${S.uid}/state`,snap=clone(next);
+ S.priv=next;S.privPending++;render();const path=privPath(),snap=clone(next);
  write(path,()=>store.set(path,snap)).finally(()=>{S.privPending--;if(!S.privPending&&S.lastPriv!==undefined){S.priv=S.lastPriv||S.priv;S.lastPriv=undefined}});
 }
 function pushDay(k,extra){
@@ -413,13 +415,14 @@ function vProfile(){
  <p class="small mut" style="margin:10px 0 0">Goals are personal. Party challenges use the same rules for everyone.</p></section>
  <button class="btn danger" data-act="logout" style="width:100%">Log out</button></main>`;
 }
-function profileForm(p,first){
+function profileForm(p,first,isNew){
  p=p||{};const av=p.avatar||AV[0];
- return `<form data-form="profile"><label class="f">Pick an avatar</label><div class="avpick">${AV.map(a=>`<label><input type="radio" name="avatar" value="${a}" ${a===av?'checked':''}><span>${a}</span></label>`).join('')}</div>
+ return `<form data-form="profile" ${isNew?'data-new="1"':''}><label class="f">Pick an avatar</label><div class="avpick">${AV.map(a=>`<label><input type="radio" name="avatar" value="${a}" ${a===av?'checked':''}><span>${a}</span></label>`).join('')}</div>
  <label class="f" for="pn">Display name <span class="mut small">(doesn't have to be unique)</span></label><input id="pn" type="text" name="name" maxlength="30" value="${esc(p.name||'')}" required>
  <label class="f" for="pu">Username</label><input id="pu" type="text" name="username" maxlength="20" value="${esc(p.username||'')}" placeholder="letters, numbers, _" required autocapitalize="none" autocomplete="off"><div id="uhint" class="small" role="status" style="margin-top:6px"></div>
  <label class="f" for="pb">Bio <span class="mut small">(150 characters)</span></label><textarea id="pb" name="bio" maxlength="150" placeholder="Trying to sleep before midnight. Mostly failing.">${esc(p.bio||'')}</textarea>
- <div class="err" id="perr"></div><div class="btns" style="margin-top:16px"><button class="btn">${first?'Create my account':'Save profile'}</button>${first?'':'<button type="button" class="btn line" data-act="close">Cancel</button>'}</div></form>`;
+ <label class="f" for="ppw">${isNew?'Password':first?'Password <span class="mut small">(optional, lets you log in on other devices)</span>':'New password <span class="mut small">(leave blank to keep it)</span>'}</label><input id="ppw" type="password" name="pw" minlength="6" ${isNew?'required':''} autocomplete="new-password">
+ <div class="err" id="perr"></div><div class="btns" style="margin-top:16px"><button class="btn">${first||isNew?'Create my account':'Save profile'}</button>${first&&!isNew?'':'<button type="button" class="btn line" data-act="close">Cancel</button>'}</div></form>`;
 }
 function vOnboard(){
  return `<header class="top"><div class="in"><h1>Welcome to Habitor</h1><p>Track habits, sleep and screen time, then challenge your friends for a monthly trophy.</p></div></header>
@@ -433,7 +436,10 @@ function vModal(){
   <div class="btns" style="margin-top:16px"><button class="btn">Create party</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
  if(M.k==='join')body=`<h2>Join a party</h2><p class="mut">Ask a friend for their 6-character party code.</p><form data-form="join"><label class="f" for="jc">Party code</label><input id="jc" type="text" name="code" maxlength="6" class="code" autocapitalize="characters" required><div class="err" id="jerr"></div>
   <div class="btns" style="margin-top:16px"><button class="btn">Join</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
- if(M.k==='logout')body=`<h2>Log out of Habitor?</h2><p class="mut">Your habits, parties and trophies stay saved. Log back in any time to pick up where you left off.</p><div class="btns" style="margin-top:16px"><button class="btn danger" data-act="dologout">Log out</button><button class="btn line" data-act="close">Cancel</button></div>`;
+ if(M.k==='logout')body=`<h2>Log out of Habitor?</h2><p class="mut">Your habits, parties and trophies stay saved. Log back in any time to pick up where you left off.</p><div class="btns" style="margin-top:16px"><button class="btn danger" data-act="dologout">Log out</button><button class="btn ghost" data-act="other">Use another account</button><button class="btn line" data-act="close">Cancel</button></div>`;
+ if(M.k==='other')body=otherModal();
+ if(M.k==='newacct')body=`<h2>Create a new account</h2><p class="mut">Pick a username nobody else has. You'll need the password to log in on other devices.</p>${profileForm(null,true,true)}`;
+ if(M.k==='save'){const p=S.profiles[M.id]||{};body=`<h2>Save this account?</h2><p class="mut">Save @${esc(p.username||'')} on this device so you can switch to it from the log out screen without a password.</p><div class="btns" style="margin-top:16px"><button class="btn" data-act="saveyes">Save account</button><button class="btn line" data-act="saveno">Not now</button></div>`}
  if(M.k==='editprofile')body=`<h2>Edit profile</h2>${profileForm(me(),false)}`;
  if(M.k==='profile'){const p=S.profiles[M.uid]||{},shared=myParties().filter(x=>x.members&&x.members[M.uid]).map(x=>esc((x.emoji||'')+' '+x.name)).join(', ');
   body=`<div style="text-align:center"><div class="av xl" style="margin:0 auto 10px;border-color:var(--co2)">${esc(p.avatar||'🙂')}</div><h2>${esc(p.name||'Friend')}</h2><p class="mut" style="margin:0">@${esc(p.username||'')}</p></div>
@@ -623,18 +629,46 @@ const takenBy=u=>{const c=S.usernames[u];if(c&&c.uid)return c.uid;const hit=Obje
 function uHint(raw){const u=String(raw||'').trim().toLowerCase().replace(/^@/,'');if(!u)return['',''];if(!U_RE.test(u))return['3–20 letters, numbers or underscores.','bad'];const t=takenBy(u);if(t&&t!==S.uid)return[`@${u} is already taken.`,'bad'];return[t===S.uid?`@${u} is yours.`:`@${u} is available.`,'ok']}
 let migrating=false;
 function migrateClaim(){const p=me();if(migrating||!S.loaded.u||!p||!p.username||S.readonly)return;const c=S.usernames[p.username];if(c&&c.uid)return;migrating=true;write('usernames/'+p.username,()=>store.claim('usernames/'+p.username,S.uid))}
+/* ---------- accounts on this device ---------- */
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const savedAccts=()=>(LS.get('habitor-saved',[])||[]).filter(x=>typeof x==='string');
+function getActive(){try{return sessionStorage.getItem('habitor-active')||localStorage.getItem('habitor-active')}catch(e){return null}}
+function setActive(id,persist){try{sessionStorage.removeItem('habitor-active');localStorage.removeItem('habitor-active');if(id!==S.cuid)(persist?localStorage:sessionStorage).setItem('habitor-active',id)}catch(e){}}
+const privPath=()=>S.uid===S.cuid?`data/users/${S.cuid}/state`:`priv/${S.uid}`;
+let privUnsub=null,privErr=null;
+function subPriv(){if(typeof privUnsub==='function')privUnsub();S.loaded.v=false;S.priv=null;
+ privUnsub=store.subDoc(privPath(),v=>{const n=v?{habits:[],logs:{},goals:{},...clone(v)}:null;if(S.privPending)S.lastPriv=n;else S.priv=n;S.loaded.v=true;ready()},privErr)}
+function switchTo(id,persist){S.uid=id;setActive(id,persist);S.out=false;try{localStorage.removeItem('habitor-signed-out')}catch(e){}
+ S.game=null;S.chat=null;S.party=null;S.tab='today';S.modal=null;S.edit=false;
+ for(const k of Object.keys(chatSubs)){const u=chatSubs[k];if(typeof u==='function')u();delete chatSubs[k]}S.chats={};
+ const sk=(S.profiles[id]||{}).skin;subPriv();syncChatSubs();render();scrollTo(0,0)}
+async function hashPw(pw,salt){const enc=new TextEncoder(),k=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveBits']);
+ const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(salt),iterations:150000,hash:'SHA-256'},k,256);return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+async function setPassword(id,pw){const salt=rid()+rid(),hash=await hashPw(pw,salt);const path='auth/'+id;await write(path,()=>store.set(path,{salt,hash,iter:150000,at:Date.now()}))}
+const acctRow=(id,note,act,forget)=>{const p=S.profiles[id]||{};return `<div class="row" style="border-top:1px solid var(--line)"><button class="frow sp" style="border:0" data-act="${act}" data-id="${esc(id)}"><span class="av">${esc(p.avatar||'🙂')}</span><span class="sp"><b>${esc(p.name||'Account')}</b><br><span class="small mut">@${esc(p.username||'')}${note?' · '+note:''}</span></span></button>${forget?`<button class="x" data-act="forget" data-id="${esc(id)}" aria-label="Remove @${esc(p.username||'')} from this device">✕</button>`:''}</div>`};
+function vOut(){const list=[];
+ if(S.profiles[S.cuid])list.push(acctRow(S.cuid,'main account','swacct',false));
+ for(const id of savedAccts())if(id!==S.cuid&&S.profiles[id])list.push(acctRow(id,'saved','swacct',true));
+ return `<main class="wrap" style="padding-top:48px"><div style="text-align:center"><div class="num" style="font-size:40px;color:var(--co-ink)">Habitor</div><p class="mut" style="margin:6px 0 22px">You're logged out. Choose an account.</p></div>
+ <section class="card"><h2>Accounts on this device</h2>${list.length?list.join(''):'<div class="empty">No saved accounts yet.</div>'}</section>
+ <button class="btn" data-act="other" style="width:100%">Use another account</button></main>`}
+function otherModal(){return `<h2>Use another account</h2><p class="mut">Log in with a username and password, or create a new account.</p>
+ <form data-form="login"><label class="f" for="lu">Username</label><input id="lu" type="text" name="u" required autocapitalize="none" autocomplete="username" placeholder="@username">
+ <label class="f" for="lp">Password</label><input id="lp" type="password" name="pw" required autocomplete="current-password"><div class="err" id="lerr"></div>
+ <div class="btns" style="margin-top:14px"><button class="btn">Log in</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>
+ <hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><p style="margin:0 0 10px;font-weight:600">New to Habitor?</p><button class="btn ghost" data-act="newacct" style="width:100%">Create a new account</button>`}
+
 const curSkin=()=>priv().skin||document.documentElement.dataset.skin||'club';
-function vOut(){const p=me()||{};return `<main class="wrap"><div class="load"><div style="max-width:340px"><div class="av xl" style="margin:0 auto 14px;border-color:var(--co2)">${esc(p.avatar||'🙂')}</div><div class="num" style="font-size:34px;color:var(--ink)">Habitor</div><p style="margin:8px 0 20px">You're logged out${p.username?` of @${esc(p.username)}`:''}.</p><button class="btn" data-act="login" style="width:100%">Log in</button></div></div></main>`}
 function render(){
  if(S.priv&&S.priv.skin&&S.priv.skin!==document.documentElement.dataset.skin)applySkin(S.priv.skin);
  if(!S.ready&&!S.slow)return;
  let h;
  if(!S.ready){h=`<main class="wrap">${banners()}<div class="load"><p>Loading your club…</p></div></main>`}
- else if(S.out){h=vOut();$('#app').innerHTML=h;$('#modal').innerHTML='';return}
+ else if(S.out){h=vOut();$('#app').innerHTML=h;$('#modal').innerHTML=vModal();return}
  else if(!me())h=vOnboard();
  else{h=({today:vToday,calendar:vCal,parties:vParties,games:vGames,friends:vFriends,profile:vProfile}[S.tab]||vToday)();
   h+=`<nav class="tabs" aria-label="Sections"><div class="in">${[['today','Today'],['calendar','Calendar'],['parties','Parties'],['games','Games'],['friends','Friends'],['profile','Profile']].map(([k,l])=>{const bd=k==='friends'?friendBadge():0;return `<button class="${S.tab===k?'on':''}" data-act="tab" data-k="${k}" ${S.tab===k?'aria-current="page"':''} aria-label="${l}${bd?`, ${bd} new`:''}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>${l}${bd?`<span class="tbadge" aria-hidden="true">${bd>9?'9+':bd}</span>`:''}</button>`}).join('')}</div></nav>`}
- $('#app').innerHTML=h;$('#modal').innerHTML=me()?vModal():'';
+ $('#app').innerHTML=h;$('#modal').innerHTML=(me()||(S.modal&&['other','newacct'].includes(S.modal.k)))?vModal():'';
  if($('#msgs'))scrollTo(0,document.body.scrollHeight);
 }
 let deferred=false;
@@ -659,7 +693,12 @@ document.addEventListener('click',e=>{
  else if(a==='gsq')gameClick(b)
  else if(a==='logout'){S.modal={k:'logout'};render()}
  else if(a==='dologout'){S.out=true;S.modal=null;S.game=null;S.party=null;S.tab='today';try{localStorage.setItem('habitor-signed-out','1')}catch(e){}render();scrollTo(0,0)}
- else if(a==='login'){S.out=false;try{localStorage.removeItem('habitor-signed-out')}catch(e){}render()}
+ else if(a==='other'){if(!S.out){S.out=true;S.game=null;try{localStorage.setItem('habitor-signed-out','1')}catch(e){}}S.modal={k:'other'};render();setTimeout(()=>{const i=$('#lu');i&&i.focus()},30)}
+ else if(a==='newacct'){S.modal={k:'newacct'};render()}
+ else if(a==='swacct'){const id=b.dataset.id;switchTo(id,true)}
+ else if(a==='forget'){LS.set('habitor-saved',savedAccts().filter(x=>x!==b.dataset.id));if(getActive()===b.dataset.id)setActive(S.cuid,true);toast('Removed from this device');render()}
+ else if(a==='saveyes'){const id=S.modal.id;LS.set('habitor-saved',[...new Set([...savedAccts(),id])]);setActive(id,true);S.modal=null;toast('Account saved on this device');render()}
+ else if(a==='saveno'){S.modal=null;render()}
  else if(['fadd','faccept','fdecline','fcancel'].includes(a))friendAct(a,b.dataset.uid)
  else if(a==='funfriend'){if(S.modal&&S.modal.confirm)friendAct(a,b.dataset.uid);else{S.modal={...S.modal,confirm:true};render()}}
  else if(a==='fchat'){S.tab='friends';S.chat=b.dataset.uid;S.modal=null;render()}
@@ -684,16 +723,25 @@ document.addEventListener('submit',e=>{
  else if(t==='sleep'){const bed=val('bed'),wake=val('wake'),m=sleepMins(bed,wake);if(!m||m>960){toast('Check your times: sleep must be under 16 hours');return}deferred=false;pushDay(S.day,{sleepH:Math.round(m/60*100)/100,sleepMin:m,bed,wake});toast(`Saved: ${fmtMin(m)} of sleep`)}
  else if(t==='screen'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}deferred=false;pushDay(S.day,{screenMin:hh*60+mm,src:'manual'});toast('Screen time saved')}
  else if(t==='chat'){const text=val('t').slice(0,1000);if(!text||!S.chat)return;const pid=pairId(S.uid,S.chat),path=`chats/${pid}/by/${S.uid}`,cur=((S.chats[pid]||{})[S.uid]||[]);const msgs=[...cur,{t:text,at:Date.now()}].slice(-300);S.chats={...S.chats,[pid]:{...(S.chats[pid]||{}),[S.uid]:msgs}};markRead(pid);const i=$('#chatin');if(i)i.value='';const m=$('#msgs');if(m){m.innerHTML=msgsHTML(pid);scrollTo(0,document.body.scrollHeight)}write(path,()=>store.set(path,{msgs}))}
+ else if(t==='login'){const u=val('u').toLowerCase().replace(/^@/,''),pw=String(F.get('pw')||''),err=$('#lerr'),btn=f.querySelector('button:not([type=button])');const id=takenBy(u);
+  if(!id||!S.profiles[id]){err.textContent='No account with that username.';return}
+  if(btn){btn.disabled=true;btn.textContent='Checking…'}
+  (async()=>{try{const a=await store.get('auth/'+id);if(!a||!a.salt){err.textContent='This account has no password yet. Its owner can set one in Profile › Edit profile.';return}
+   const h=await hashPw(pw,a.salt);if(h!==a.hash){err.textContent='Wrong password. Try again.';return}
+   const known=id===S.cuid||savedAccts().includes(id);switchTo(id,known);if(!known){S.modal={k:'save',id};render()}}
+   catch(e){err.textContent="Couldn't log in just now. Try again."}finally{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Log in'}}})()}
  else if(t==='goals'){const s=parseFloat(val('sleep')),sc=parseInt(val('screen'),10);if(!(s>=4&&s<=12&&sc>=15&&sc<=1440)){toast('Check your goals');return}const st=clone(priv());st.goals={sleepH:s,screenMin:sc,bed:val('bed')||'23:30'};deferred=false;savePriv(st);toast('Goals saved')}
- else if(t==='profile'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])');
+ else if(t==='profile'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])'),isNew=f.dataset.new==='1',id=isNew?'a'+rid():S.uid,pw=String(F.get('pw')||'');
+  if(pw&&pw.length<6){err.textContent='Password must be at least 6 characters.';return}
   if(!name){err.textContent='Add a display name.';return}
   if(!U_RE.test(u)){err.textContent='Username: 3–20 letters, numbers or underscores.';return}
-  const t0=takenBy(u);if(t0&&t0!==S.uid){err.textContent=`@${u} is already taken. Try another username.`;return}
+  const t0=takenBy(u);if(t0&&t0!==id){err.textContent=`@${u} is already taken. Try another username.`;return}
   if(btn){btn.disabled=true;btn.textContent='Checking username…'}err.textContent='';
-  (async()=>{let ok=false;try{ok=await store.claim('usernames/'+u,S.uid)}catch(e){if(e&&e.code==='invalid_argument'){S.readonly=true;err.textContent="Couldn't save. Ask the app's owner to share it with you as an Editor."}else err.textContent="Couldn't check the username. Try again.";if(btn){btn.disabled=false;btn.textContent='Try again'}return}
+  (async()=>{let ok=false;try{ok=await store.claim('usernames/'+u,id)}catch(e){if(e&&e.code==='invalid_argument'){S.readonly=true;err.textContent="Couldn't save. Ask the app's owner to share it with you as an Editor."}else err.textContent="Couldn't check the username. Try again.";if(btn){btn.disabled=false;btn.textContent='Try again'}return}
    if(!ok){err.textContent=`@${u} was just taken by someone else. Try another.`;if(btn){btn.disabled=false;btn.textContent='Save'}return}
-   const old=(me()||{}).username,p={...(me()||{joined:Date.now()}),name,username:u,bio,avatar};S.profiles={...S.profiles,[S.uid]:p};S.modal=null;deferred=false;render();
-   write('profiles/'+S.uid,()=>store.set('profiles/'+S.uid,p));
+   const base=isNew?{joined:Date.now()}:(me()||{joined:Date.now()}),old=isNew?null:base.username,p={...base,name,username:u,bio,avatar};S.profiles={...S.profiles,[id]:p};S.modal=null;deferred=false;
+   write('profiles/'+id,()=>store.set('profiles/'+id,p));if(pw)setPassword(id,pw).catch(()=>toast("Couldn't save the password"));
+   if(isNew){switchTo(id,false);S.modal={k:'save',id};render();return}render();
    if(old&&old!==u&&(S.usernames[old]||{}).uid===S.uid)write('usernames/'+old,()=>store.del('usernames/'+old))})()}
  else if(t==='newparty'){const name=val('name');if(!name)return;const id=rid(),m=curM(),p={name,emoji:val('emoji')||'🎉',code:code6(),host:S.uid,members:{[S.uid]:Date.now()},challenges:{[m]:{type:val('type')||'screen',by:S.uid,at:Date.now()}},created:Date.now()};
   S.parties={...S.parties,[id]:p};S.modal=null;S.party=id;S.tab='parties';deferred=false;render();write('parties/'+id,()=>store.set('parties/'+id,p))}
@@ -704,13 +752,14 @@ document.addEventListener('submit',e=>{
 });
 
 /* ---------- boot ---------- */
-function ready(){migrateClaim();if(S.loaded.p&&S.loaded.v&&!S.ready){S.ready=true;render()}awardCheck();soon()}
+function ready(){if(S.loaded.p&&S.uid!==S.cuid&&!S.profiles[S.uid]){S.uid=S.cuid;setActive(S.cuid,true);subPriv();return}migrateClaim();if(S.loaded.p&&S.loaded.v&&!S.ready){S.ready=true;render()}awardCheck();soon()}
 async function boot(){
  const slow=setTimeout(()=>{S.slow=true;render()},10000);
  let db=null,user=null;
  try{if(window.claude&&typeof claude.use==='function')[db,user]=await Promise.all([claude.use('db'),claude.use('user')])}catch(e){}
  let uid=null;if(db&&user){try{uid=await user.id()}catch(e){}}
- if(db&&uid){store=makeRemote(db);S.uid=uid}else{store=makeLocal();S.uid='me';S.local=true}
+ if(db&&uid){store=makeRemote(db);S.cuid=uid}else{store=makeLocal();S.cuid='me';S.local=true}
+ S.uid=getActive()||S.cuid;
  const err=n=>e=>{if(!S.err[n]){S.err[n]=1;toast(e&&e.code==='revoked'?'Access to live data ended.':"Live data couldn't load. Reopen the app to retry.")}};
  const fill=docs=>Object.fromEntries(docs.filter(d=>d.data).map(d=>[d.id,d.data]));
  store.subCol('profiles',d=>{S.profiles=fill(d);S.loaded.p=true;clearTimeout(slow);ready()},err('p'));
@@ -719,7 +768,7 @@ async function boot(){
  store.subCol('usernames',d=>{S.usernames=fill(d);S.loaded.u=true;ready()},err('u'));
  store.subCol('friends',d=>{S.friends=fill(d);syncChatSubs();ready()},err('f'));
  store.subCol('trophies',d=>{S.trophies=fill(d);ready()},err('t'));
- store.subDoc(`data/users/${S.uid}/state`,v=>{const n=v?{habits:[],logs:{},goals:{},...clone(v)}:null;if(S.privPending)S.lastPriv=n;else S.priv=n;S.loaded.v=true;ready()},err('v'));
+ privErr=err('v');subPriv();
 }
 boot();
 }

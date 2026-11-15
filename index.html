@@ -151,6 +151,7 @@ label.f{display:block;font-size:14px;font-weight:600;margin:12px 0 6px}
 .toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:20;max-width:90vw;font-size:15px}
 .note{background:color-mix(in srgb,var(--gold) 22%,var(--card));border:1px solid color-mix(in srgb,var(--gold) 50%,var(--line));border-radius:14px;padding:10px 12px;font-size:14px;margin-bottom:14px}
 .load{min-height:80vh;display:grid;place-items:center;text-align:center;color:var(--mut)}
+.hint-ok{color:var(--ok)}.hint-bad{color:var(--cor)}
 .err{color:var(--cor);font-size:14px;margin-top:6px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:380px){.dial{grid-template-columns:110px minmax(0,1fr)}.dial svg{width:110px;height:110px}.big{font-size:36px}}
@@ -217,7 +218,7 @@ function applySkin(k){if(!SKINS.some(x=>x[0]===k))k='club';document.documentElem
 try{applySkin(localStorage.getItem(SKEY)||'club')}catch(e){applySkin('club')}
 
 let wasOut=false;try{wasOut=localStorage.getItem('habitor-signed-out')==='1'}catch(e){}
-const S={friends:{},chats:{},chat:null,fq:'',out:wasOut,game:null,tips:{},ready:false,local:false,uid:null,tab:'today',day:todayK(),calM:curM(),calSel:todayK(),party:null,modal:null,edit:false,
+const S={usernames:{},friends:{},chats:{},chat:null,fq:'',out:wasOut,game:null,tips:{},ready:false,local:false,uid:null,tab:'today',day:todayK(),calM:curM(),calSel:todayK(),party:null,modal:null,edit:false,
  profiles:{},stats:{},parties:{},trophies:{},priv:null,privPending:0,lastPriv:undefined,loaded:{p:false,v:false},slow:false,readonly:false,err:{}};
 
 /* ---------- storage: shared db when available, this browser otherwise ---------- */
@@ -233,7 +234,8 @@ function makeLocal(){
   subCol(p,cb){subs.push({p,cb,col:true});setTimeout(()=>cb(col(p)))},
   async set(p,v){data[p]=clone(v);save();emit()},
   async merge(p,v){data[p]=deepMerge(data[p]||{},clone(v));save();emit()},
-  async del(p){delete data[p];save();emit()}};
+  async del(p){delete data[p];save();emit()},
+  async claim(p,uid){const d=data[p];if(d&&d.uid&&d.uid!==uid)return false;data[p]={uid,at:Date.now()};save();emit();return true}};
 }
 function makeRemote(db){
  return{local:false,
@@ -241,7 +243,8 @@ function makeRemote(db){
   subCol(p,cb,err){return db.collection(p).onSnapshot(q=>cb(q.docs.map(d=>({id:d.id,data:d.data()}))),err)},
   set:(p,v)=>db.doc(p).set(v),
   async merge(p,v){const r=db.doc(p);const s=await r.get();return s.exists?r.update(v):r.set(v)},
-  del:p=>db.doc(p).delete()};
+  del:p=>db.doc(p).delete(),
+  async claim(p,uid){const r=db.doc(p);const l=await r.acquire({holder:uid,ttlMs:5000});if(!l.acquired)return false;const s=await r.get();const d=s.exists?s.data():null;if(d&&d.uid&&d.uid!==uid)return false;if(!d||d.uid!==uid)await r.set({uid,at:Date.now()});return true}};
 }
 const Q={};
 function write(path,fn){
@@ -413,8 +416,8 @@ function vProfile(){
 function profileForm(p,first){
  p=p||{};const av=p.avatar||AV[0];
  return `<form data-form="profile"><label class="f">Pick an avatar</label><div class="avpick">${AV.map(a=>`<label><input type="radio" name="avatar" value="${a}" ${a===av?'checked':''}><span>${a}</span></label>`).join('')}</div>
- <label class="f" for="pn">Display name</label><input id="pn" type="text" name="name" maxlength="30" value="${esc(p.name||'')}" required>
- <label class="f" for="pu">Username</label><input id="pu" type="text" name="username" maxlength="20" value="${esc(p.username||'')}" placeholder="letters, numbers, _" required autocapitalize="none">
+ <label class="f" for="pn">Display name <span class="mut small">(doesn't have to be unique)</span></label><input id="pn" type="text" name="name" maxlength="30" value="${esc(p.name||'')}" required>
+ <label class="f" for="pu">Username</label><input id="pu" type="text" name="username" maxlength="20" value="${esc(p.username||'')}" placeholder="letters, numbers, _" required autocapitalize="none" autocomplete="off"><div id="uhint" class="small" role="status" style="margin-top:6px"></div>
  <label class="f" for="pb">Bio <span class="mut small">(150 characters)</span></label><textarea id="pb" name="bio" maxlength="150" placeholder="Trying to sleep before midnight. Mostly failing.">${esc(p.bio||'')}</textarea>
  <div class="err" id="perr"></div><div class="btns" style="margin-top:16px"><button class="btn">${first?'Create my account':'Save profile'}</button>${first?'':'<button type="button" class="btn line" data-act="close">Cancel</button>'}</div></form>`;
 }
@@ -615,6 +618,11 @@ async function friendAct(a,uid){const pid=pairId(S.uid,uid),path='friends/'+pid,
  else if(a==='fdecline'||a==='fcancel'||a==='funfriend'){const n={...S.friends};delete n[pid];S.friends=n;if(a==='funfriend'){S.chat=null;S.modal=null}syncChatSubs();render();write(path,()=>store.del(path));toast(a==='fdecline'?'Request declined':a==='fcancel'?'Request cancelled':'Friend removed')}
 }
 
+const U_RE=/^[a-z0-9_]{3,20}$/;
+const takenBy=u=>{const c=S.usernames[u];if(c&&c.uid)return c.uid;const hit=Object.entries(S.profiles).find(([,p])=>p&&p.username===u);return hit?hit[0]:null};
+function uHint(raw){const u=String(raw||'').trim().toLowerCase().replace(/^@/,'');if(!u)return['',''];if(!U_RE.test(u))return['3–20 letters, numbers or underscores.','bad'];const t=takenBy(u);if(t&&t!==S.uid)return[`@${u} is already taken.`,'bad'];return[t===S.uid?`@${u} is yours.`:`@${u} is available.`,'ok']}
+let migrating=false;
+function migrateClaim(){const p=me();if(migrating||!S.loaded.u||!p||!p.username||S.readonly)return;const c=S.usernames[p.username];if(c&&c.uid)return;migrating=true;write('usernames/'+p.username,()=>store.claim('usernames/'+p.username,S.uid))}
 const curSkin=()=>priv().skin||document.documentElement.dataset.skin||'club';
 function vOut(){const p=me()||{};return `<main class="wrap"><div class="load"><div style="max-width:340px"><div class="av xl" style="margin:0 auto 14px;border-color:var(--co2)">${esc(p.avatar||'🙂')}</div><div class="num" style="font-size:34px;color:var(--ink)">Habitor</div><p style="margin:8px 0 20px">You're logged out${p.username?` of @${esc(p.username)}`:''}.</p><button class="btn" data-act="login" style="width:100%">Log in</button></div></div></main>`}
 function render(){
@@ -667,7 +675,7 @@ document.addEventListener('click',e=>{
  else if(a==='pick'){const id=S.party,m=curM(),v={type:b.dataset.t,by:S.uid,at:Date.now()};S.parties={...S.parties,[id]:deepMerge(S.parties[id],{challenges:{[m]:v}})};render();write('parties/'+id,()=>store.merge('parties/'+id,{challenges:{[m]:v}}))}
  else if(a==='leave'){const id=b.dataset.id,p=clone(S.parties[id]||{});delete p.members[S.uid];if(p.host===S.uid){const rest=Object.entries(p.members).sort((x,y)=>x[1]-y[1]);if(rest.length)p.host=rest[0][0]}S.parties={...S.parties,[id]:p};S.party=null;render();write('parties/'+id,()=>store.set('parties/'+id,p));toast('You left the party')}
 });
-document.addEventListener('input',e=>{if(e.target.id==='fq'){S.fq=e.target.value;const r=$('#fres');if(r)r.innerHTML=searchHTML();return}if(e.target.id==='sb'||e.target.id==='sw'){const o=$('#sdur');if(o)o.textContent=fmtMin(sleepMins($('#sb').value,$('#sw').value))}});
+document.addEventListener('input',e=>{if(e.target.id==='pu'){const h=$('#uhint'),[t,k]=uHint(e.target.value);if(h){h.textContent=t;h.className='small hint-'+k}return}if(e.target.id==='fq'){S.fq=e.target.value;const r=$('#fres');if(r)r.innerHTML=searchHTML();return}if(e.target.id==='sb'||e.target.id==='sw'){const o=$('#sdur');if(o)o.textContent=fmtMin(sleepMins($('#sb').value,$('#sw').value))}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.modal){S.modal=null;render()}if((e.key==='Enter'||e.key===' ')&&e.target.matches('li[data-act]')){e.preventDefault();e.target.click()}});
 document.addEventListener('submit',e=>{
  const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();const F=new FormData(f),t=f.dataset.form,val=n=>String(F.get(n)||'').trim();
@@ -677,11 +685,16 @@ document.addEventListener('submit',e=>{
  else if(t==='screen'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}deferred=false;pushDay(S.day,{screenMin:hh*60+mm,src:'manual'});toast('Screen time saved')}
  else if(t==='chat'){const text=val('t').slice(0,1000);if(!text||!S.chat)return;const pid=pairId(S.uid,S.chat),path=`chats/${pid}/by/${S.uid}`,cur=((S.chats[pid]||{})[S.uid]||[]);const msgs=[...cur,{t:text,at:Date.now()}].slice(-300);S.chats={...S.chats,[pid]:{...(S.chats[pid]||{}),[S.uid]:msgs}};markRead(pid);const i=$('#chatin');if(i)i.value='';const m=$('#msgs');if(m){m.innerHTML=msgsHTML(pid);scrollTo(0,document.body.scrollHeight)}write(path,()=>store.set(path,{msgs}))}
  else if(t==='goals'){const s=parseFloat(val('sleep')),sc=parseInt(val('screen'),10);if(!(s>=4&&s<=12&&sc>=15&&sc<=1440)){toast('Check your goals');return}const st=clone(priv());st.goals={sleepH:s,screenMin:sc,bed:val('bed')||'23:30'};deferred=false;savePriv(st);toast('Goals saved')}
- else if(t==='profile'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr');
-  if(!/^[a-z0-9_]{3,20}$/.test(u)){err.textContent='Username: 3–20 letters, numbers or underscores.';return}
-  if(Object.entries(S.profiles).some(([id,p])=>id!==S.uid&&p&&p.username===u)){err.textContent='That username is taken.';return}
-  const p={...(me()||{joined:Date.now()}),name,username:u,bio,avatar};S.profiles={...S.profiles,[S.uid]:p};S.modal=null;deferred=false;render();
-  write('profiles/'+S.uid,()=>store.set('profiles/'+S.uid,p))}
+ else if(t==='profile'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])');
+  if(!name){err.textContent='Add a display name.';return}
+  if(!U_RE.test(u)){err.textContent='Username: 3–20 letters, numbers or underscores.';return}
+  const t0=takenBy(u);if(t0&&t0!==S.uid){err.textContent=`@${u} is already taken. Try another username.`;return}
+  if(btn){btn.disabled=true;btn.textContent='Checking username…'}err.textContent='';
+  (async()=>{let ok=false;try{ok=await store.claim('usernames/'+u,S.uid)}catch(e){if(e&&e.code==='invalid_argument'){S.readonly=true;err.textContent="Couldn't save. Ask the app's owner to share it with you as an Editor."}else err.textContent="Couldn't check the username. Try again.";if(btn){btn.disabled=false;btn.textContent='Try again'}return}
+   if(!ok){err.textContent=`@${u} was just taken by someone else. Try another.`;if(btn){btn.disabled=false;btn.textContent='Save'}return}
+   const old=(me()||{}).username,p={...(me()||{joined:Date.now()}),name,username:u,bio,avatar};S.profiles={...S.profiles,[S.uid]:p};S.modal=null;deferred=false;render();
+   write('profiles/'+S.uid,()=>store.set('profiles/'+S.uid,p));
+   if(old&&old!==u&&(S.usernames[old]||{}).uid===S.uid)write('usernames/'+old,()=>store.del('usernames/'+old))})()}
  else if(t==='newparty'){const name=val('name');if(!name)return;const id=rid(),m=curM(),p={name,emoji:val('emoji')||'🎉',code:code6(),host:S.uid,members:{[S.uid]:Date.now()},challenges:{[m]:{type:val('type')||'screen',by:S.uid,at:Date.now()}},created:Date.now()};
   S.parties={...S.parties,[id]:p};S.modal=null;S.party=id;S.tab='parties';deferred=false;render();write('parties/'+id,()=>store.set('parties/'+id,p))}
  else if(t==='join'){const c=val('code').toUpperCase(),hit=Object.entries(S.parties).find(([,p])=>p&&p.code===c),err=$('#jerr');
@@ -691,7 +704,7 @@ document.addEventListener('submit',e=>{
 });
 
 /* ---------- boot ---------- */
-function ready(){if(S.loaded.p&&S.loaded.v&&!S.ready){S.ready=true;render()}awardCheck();soon()}
+function ready(){migrateClaim();if(S.loaded.p&&S.loaded.v&&!S.ready){S.ready=true;render()}awardCheck();soon()}
 async function boot(){
  const slow=setTimeout(()=>{S.slow=true;render()},10000);
  let db=null,user=null;
@@ -703,6 +716,7 @@ async function boot(){
  store.subCol('profiles',d=>{S.profiles=fill(d);S.loaded.p=true;clearTimeout(slow);ready()},err('p'));
  store.subCol('stats',d=>{S.stats=fill(d);ready()},err('s'));
  store.subCol('parties',d=>{S.parties=fill(d);ready()},err('pa'));
+ store.subCol('usernames',d=>{S.usernames=fill(d);S.loaded.u=true;ready()},err('u'));
  store.subCol('friends',d=>{S.friends=fill(d);syncChatSubs();ready()},err('f'));
  store.subCol('trophies',d=>{S.trophies=fill(d);ready()},err('t'));
  store.subDoc(`data/users/${S.uid}/state`,v=>{const n=v?{habits:[],logs:{},goals:{},...clone(v)}:null;if(S.privPending)S.lastPriv=n;else S.priv=n;S.loaded.v=true;ready()},err('v'));

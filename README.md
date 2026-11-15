@@ -11,6 +11,7 @@ A habit tracker for friends. Track habits, sleep and screen time, join a party, 
 - Parties with invite codes, monthly challenges (lowest screen time, sleep champion, habit master, streak king), live leaderboards and trophies
 - Sleep and screen-time tips when goals are missed
 - Games tab: chess, checkers, Connect Four, tic-tac-toe and memory match, against the computer or 2 players on one phone
+- Friends tab: search by display name or username, send, accept or decline requests, and text friends in the app
 - Five selectable themes: Quiet Ritual, Night Owl, Club League, Sunrise Pop, Field Notes
 
 ## Running it

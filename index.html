@@ -266,7 +266,7 @@ function write(path,fn){
 /* ---------- derived data ---------- */
 const me=()=>S.profiles[S.uid];
 const priv=()=>S.priv||{habits:[],logs:{},goals:{}};
-const goals=()=>({sleepH:7.5,screenMin:180,bed:'23:30',...(priv().goals||{})});
+const goals=()=>({sleepH:7.5,screenMin:180,bed:'23:30',logAt:'21:00',...(priv().goals||{})});
 const myDays=()=>(S.stats[S.uid]&&S.stats[S.uid].days)||{};
 const WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const wdOf=k=>(parseK(k).getDay()+6)%7;
@@ -421,7 +421,7 @@ function vProfile(){
  <div class="btns" style="margin-top:14px"><button class="btn line sm" data-act="modal" data-k="editprofile">Edit profile</button></div></section>
  <section class="card"><h2>Trophy cabinet</h2>${trophyGrid(S.uid)}</section>
  <section class="card"><h2>App style</h2><p class="small mut" style="margin:-4px 0 12px">Pick the look you like. Only you see your choice.</p><div class="skins">${SKINS.map(([k,n,d,c])=>`<button class="skin ${curSkin()===k?'on':''}" data-act="skin" data-k="${k}" aria-pressed="${curSkin()===k}"><span class="sw">${c.map(x=>`<i style="background:${x}"></i>`).join('')}</span><b>${n}</b><span class="small mut">${d}</span></button>`).join('')}</div></section>
- <section class="card"><h2>My goals</h2><form data-form="goals"><div class="two"><div><label class="f" for="gb">Bedtime target</label><input id="gb" type="time" name="bed" value="${esc(g.bed)}"></div><div></div></div><div class="two"><div><label class="f" for="gs">Sleep (hours)</label><input id="gs" type="number" name="sleep" min="4" max="12" step="0.25" value="${g.sleepH}"></div><div><label class="f" for="gt">Screen time max (min)</label><input id="gt" type="number" name="screen" min="15" max="1440" step="15" value="${g.screenMin}"></div></div><div class="btns" style="margin-top:12px"><button class="btn ghost">Save goals</button></div></form>
+ <section class="card"><h2>My goals</h2><form data-form="goals"><div class="two"><div><label class="f" for="gb">Bedtime target</label><input id="gb" type="time" name="bed" value="${esc(g.bed)}"></div><div><label class="f" for="gl">Screen-time check-in</label><input id="gl" type="time" name="logAt" value="${esc(g.logAt||'')}"></div></div><p class="small mut" style="margin:6px 0 0">Each evening at this time, Habitor asks you to log today's screen time. Clear it to turn the check-in off.</p><div class="two"><div><label class="f" for="gs">Sleep (hours)</label><input id="gs" type="number" name="sleep" min="4" max="12" step="0.25" value="${g.sleepH}"></div><div><label class="f" for="gt">Screen time max (min)</label><input id="gt" type="number" name="screen" min="15" max="1440" step="15" value="${g.screenMin}"></div></div><div class="btns" style="margin-top:12px"><button class="btn ghost">Save goals</button></div></form>
  <p class="small mut" style="margin:10px 0 0">Goals are personal. Party challenges use the same rules for everyone.</p></section>
  <button class="btn danger" data-act="logout" style="width:100%">Log out</button></main>`;
 }
@@ -449,6 +449,9 @@ function vModal(){
   <div class="btns" style="margin-top:16px"><button class="btn">Join</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
  if(M.k==='logout')body=`<h2>Log out of Habitor?</h2><p class="mut">Your habits, parties and trophies stay saved. Log back in any time to pick up where you left off.</p><div class="btns" style="margin-top:16px"><button class="btn danger" data-act="dologout">Log out</button><button class="btn ghost" data-act="other">Use another account</button><button class="btn line" data-act="close">Cancel</button></div>`;
  if(M.k==='other')body=otherModal(M.login);
+ if(M.k==='scrlog'){const g=goals();body=`<div style="text-align:center"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5" fill="none" stroke="var(--co)" stroke-width="2"/><path d="M10.5 18.5h3" stroke="var(--co)" stroke-width="2" stroke-linecap="round"/></svg><h2 style="margin-top:6px">How much screen time today?</h2><p class="mut" style="margin:4px 0 0">Check Screen Time (iPhone) or Digital Wellbeing (Android), then enter today's total. Your limit is ${fmtMin(g.screenMin)}.</p></div>
+  <form data-form="scrlog"><div class="two"><div><label class="f" for="sh2">Hours</label><input id="sh2" type="number" name="hh" min="0" max="24" placeholder="3" required></div><div><label class="f" for="sm2">Minutes</label><input id="sm2" type="number" name="mm" min="0" max="59" placeholder="20"></div></div>
+  <div class="btns" style="margin-top:14px"><button class="btn">Save screen time</button><button type="button" class="btn line" data-act="scrsnooze">In 30 minutes</button><button type="button" class="btn line" data-act="scrskip">Not today</button></div></form>`}
  if(M.k==='hremind'){const logs=priv().logs[todayK()]||[],hs=priv().habits.filter(h=>M.ids.includes(h.id));body=`<div style="text-align:center"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="var(--co)" stroke-width="2"/><path d="M12 9v4l2.5 2M4 5l3-2M20 5l-3-2" fill="none" stroke="var(--co)" stroke-width="2" stroke-linecap="round"/></svg><h2 style="margin-top:6px">Habit time</h2></div>${hs.map(h=>{const on=logs.includes(h.id);return `<div class="card row" style="margin:10px 0"><div class="emo">${esc(h.emoji||'•')}</div><div class="sp"><b style="font-size:18px">${esc(h.name)}</b><br><span class="mut small">Planned for ${esc(clock12(h.time))}</span></div>${on?'<span class="small" style="color:var(--ok);font-weight:700">Done</span>':`<button class="btn sm" data-act="hdone" data-id="${h.id}">Mark done</button>`}</div>`}).join('')}<div class="btns"><button class="btn line" data-act="close">Got it</button><button class="btn line" data-act="hsnooze">Remind me in 10 minutes</button></div>`}
  if(M.k==='remind'){const now=Date.now();body=`<div style="text-align:center"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="var(--co)" stroke-width="2"/><path d="M12 9v4l2.5 2M4 5l3-2M20 5l-3-2" fill="none" stroke="var(--co)" stroke-width="2" stroke-linecap="round"/></svg><h2 style="margin-top:6px">Reminder</h2></div>${M.list.map(e=>`<div class="card" style="margin:10px 0"><b style="font-size:18px">${esc(e.title)}</b><br><span class="mut">${evTs(e)<now-3600000?'Was ':''}${esc(dLabel(e.date))} at ${esc(clock12(e.time))}</span></div>`).join('')}<div class="btns"><button class="btn" data-act="close">Got it</button><button class="btn line" data-act="snooze">Remind me in 10 minutes</button></div>`}
  if(M.k==='newacct')body=`<h2>Create a new account</h2><p class="mut">Pick a username nobody else has. You'll need the password to log in on other devices.</p>${profileForm(null,true,true)}`;
@@ -694,7 +697,11 @@ function checkHabits(){if(!S.ready||S.out||!S.loaded.v||!me())return;if(S.modal&
  const st=clone(priv()),k=todayK();st.hrem={...(st.hrem||{})};due.forEach(h=>{st.hrem[h.id]={d:k};notify('Habitor',`Time for: ${h.name}`)});
  const ids=[...new Set([...((S.modal&&S.modal.ids)||[]),...due.map(h=>h.id)])];S.modal={k:'hremind',ids};savePriv(st)}
 setInterval(checkHabits,20000);
-function checkReminders(){setTimeout(checkHabits,0);if(!S.ready||S.out||!S.loaded.v||!me())return;const now=Date.now(),due=evs().filter(e=>!e.fired&&dueAt(e)<=now);if(!due.length)return;
+function checkScreen(){if(!S.ready||S.out||!S.loaded.v||!me()||S.modal)return;const g=goals();if(!g.logAt)return;const k=todayK(),d=myDays()[k]||{};if(num(d.screenMin))return;
+ const p=priv().scrAsk||{};if(p.snooze?Date.now()<p.snooze:p.d===k)return;const now=new Date(),[hh,mm]=g.logAt.split(':').map(Number);if(now.getHours()*60+now.getMinutes()<hh*60+mm)return;
+ if(S.scrShown===k&&!p.snooze)return;S.scrShown=k;notify('Habitor','Time to log today\'s screen time');S.modal={k:'scrlog'};render()}
+setInterval(checkScreen,30000);
+function checkReminders(){setTimeout(checkHabits,0);setTimeout(checkScreen,50);if(!S.ready||S.out||!S.loaded.v||!me())return;const now=Date.now(),due=evs().filter(e=>!e.fired&&dueAt(e)<=now);if(!due.length)return;
  const st=clone(priv());st.events=evs().map(e=>due.some(d=>d.id===e.id)?{...e,fired:true}:e);
  const ids=[...new Set([...((S.modal&&S.modal.k==='remind')?S.modal.ids:[]),...due.map(e=>e.id)])];
  due.forEach(e=>notify('Habitor reminder',`${e.title} at ${clock12(e.time)}`));
@@ -751,6 +758,8 @@ document.addEventListener('click',e=>{
  else if(a==='notifon'){try{Notification.requestPermission().then(p=>{toast(p==='granted'?'Notifications are on':'Notifications are off. Reminders will still show inside Habitor.');render()}).catch(()=>toast('This browser can\'t show notifications here. Reminders will show inside Habitor.'))}catch(e){toast('This browser can\'t show notifications here. Reminders will show inside Habitor.')}}
  else if(a==='hdone'){const st=clone(priv()),k=todayK(),l=st.logs[k]||[];if(!l.includes(b.dataset.id))st.logs[k]=[...l,b.dataset.id];savePriv(st);pushDay(k);const left=(S.modal.ids||[]).filter(id=>!(st.logs[k]||[]).includes(id));if(!left.length)S.modal=null;toast('Nice, ticked off!');render()}
  else if(a==='hsnooze'){const st=clone(priv()),t=Date.now()+600000;st.hrem={...(st.hrem||{})};(S.modal.ids||[]).forEach(id=>{st.hrem[id]={d:todayK(),snooze:t}});S.modal=null;savePriv(st);toast('I\'ll remind you in 10 minutes')}
+ else if(a==='scrskip'){const st=clone(priv());st.scrAsk={d:todayK()};S.modal=null;savePriv(st)}
+ else if(a==='scrsnooze'){const st=clone(priv());st.scrAsk={d:todayK(),snooze:Date.now()+1800000};S.modal=null;savePriv(st);toast('I\'ll ask again in 30 minutes')}
  else if(a==='calm'){S.calM=addMonths(S.calM,+b.dataset.n);render()}
  else if(a==='calday'){S.calSel=b.dataset.k;render()}
  else if(a==='openparty'){S.party=b.dataset.id;render();scrollTo(0,0)}
@@ -782,7 +791,9 @@ document.addEventListener('submit',e=>{
  else if(t==='event'){const title=val('title').slice(0,80),time=val('time'),before=+val('before')||0;if(!title||!/^\d{2}:\d{2}$/.test(time)||!S.calSel)return;
   const e={id:rid(),date:S.calSel,time,title,before,fired:false};const st=clone(priv());st.events=[...evs(),e].slice(-500);
   if(dueAt(e)<=Date.now())e.fired=evTs(e)<Date.now();deferred=false;savePriv(st);toast(evTs(e)<Date.now()?'Added (that time has already passed)':dueAt(e)<=Date.now()?'Reminder set':`I'll remind you ${BEFORE.find(x=>x[0]===before)[1].toLowerCase()}`)}
- else if(t==='goals'){const s=parseFloat(val('sleep')),sc=parseInt(val('screen'),10);if(!(s>=4&&s<=12&&sc>=15&&sc<=1440)){toast('Check your goals');return}const st=clone(priv());st.goals={sleepH:s,screenMin:sc,bed:val('bed')||'23:30'};deferred=false;savePriv(st);toast('Goals saved')}
+ else if(t==='scrlog'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}
+  const m=hh*60+mm,g=goals();S.modal=null;deferred=false;pushDay(todayK(),{screenMin:m,src:'manual'});toast(m<=g.screenMin?`Saved ${fmtMin(m)}: under your limit, nice!`:`Saved ${fmtMin(m)}: ${fmtMin(m-g.screenMin)} over your limit. There's a tip on Today.`)}
+ else if(t==='goals'){const s=parseFloat(val('sleep')),sc=parseInt(val('screen'),10);if(!(s>=4&&s<=12&&sc>=15&&sc<=1440)){toast('Check your goals');return}const st=clone(priv());st.goals={sleepH:s,screenMin:sc,bed:val('bed')||'23:30',logAt:/^\d{2}:\d{2}$/.test(val('logAt'))?val('logAt'):''};deferred=false;savePriv(st);toast('Goals saved')}
  else if(t==='profile'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])'),isNew=f.dataset.new==='1',id=isNew?'a'+rid():S.uid,pw=String(F.get('pw')||'');
   if(pw&&pw.length<6){err.textContent='Password must be at least 6 characters.';return}
   if(!name){err.textContent='Add a display name.';return}

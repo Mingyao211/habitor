@@ -9,6 +9,7 @@ A habit tracker for friends. Track habits, sleep and screen time, join a party, 
 - Sleep logged from bedtime and wake-up time; screen time logged daily
 - Personal calendar heatmap with reminders: tap a date, add what's happening and a time, and get reminded
 - Parties with invite codes, monthly challenges (lowest screen time, sleep champion, habit master, streak king), live leaderboards and trophies
+- Evening screen-time check-in at a time each person chooses
 - Sleep and screen-time tips when goals are missed
 - Games tab: chess, checkers, Connect Four, tic-tac-toe and memory match, against the computer or 2 players on one phone
 - Friends tab: search by display name or username, send, accept or decline requests, and text friends in the app

@@ -5,7 +5,7 @@ A habit tracker for friends. Track habits, sleep and screen time, join a party, 
 ## Features
 
 - Separate accounts with a username, avatar and bio
-- Daily habits with one-tap check-offs and streaks
+- Habits with one-tap check-offs and streaks: every day, specific days of the week, or a single day, with an optional time and reminder
 - Sleep logged from bedtime and wake-up time; screen time logged daily
 - Personal calendar heatmap with reminders: tap a date, add what's happening and a time, and get reminded
 - Parties with invite codes, monthly challenges (lowest screen time, sleep champion, habit master, streak king), live leaderboards and trophies

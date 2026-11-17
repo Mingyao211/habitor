@@ -424,15 +424,16 @@ function vProfile(){
  <section class="card"><h2>App style</h2><p class="small mut" style="margin:-4px 0 12px">Pick the look you like. Only you see your choice.</p><div class="skins">${SKINS.map(([k,n,d,c])=>`<button class="skin ${curSkin()===k?'on':''}" data-act="skin" data-k="${k}" aria-pressed="${curSkin()===k}"><span class="sw">${c.map(x=>`<i style="background:${x}"></i>`).join('')}</span><b>${n}</b><span class="small mut">${d}</span></button>`).join('')}</div></section>
  <section class="card"><h2>My goals</h2><form data-form="goals"><div class="two"><div><label class="f" for="gb">Bedtime target</label><input id="gb" type="time" name="bed" value="${esc(g.bed)}"></div><div><label class="f" for="gl">Screen-time check-in</label><input id="gl" type="time" name="logAt" value="${esc(g.logAt||'')}"></div></div><p class="small mut" style="margin:6px 0 0">Each evening at this time, Habitor asks you to log today's screen time. Clear it to turn the check-in off.</p><div class="two"><div><label class="f" for="gs">Sleep (hours)</label><input id="gs" type="number" name="sleep" min="4" max="12" step="0.25" value="${g.sleepH}"></div><div><label class="f" for="gt">Screen time max (min)</label><input id="gt" type="number" name="screen" min="15" max="1440" step="15" value="${g.screenMin}"></div></div><div class="btns" style="margin-top:12px"><button class="btn ghost">Save goals</button></div></form>
  <p class="small mut" style="margin:10px 0 0">Goals are personal. Party challenges use the same rules for everyone.</p></section>
+ <button class="btn line" data-act="settings" style="width:100%;margin-bottom:10px"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Settings</span></button>
  <button class="btn danger" data-act="logout" style="width:100%">Log out</button></main>`;
 }
 function profileForm(p,first,isNew){
  p=p||{};const av=p.avatar||AV[0];
  return `<form data-form="profile" ${isNew?'data-new="1"':''}><label class="f">Pick an avatar</label><div class="avpick">${AV.map(a=>`<label><input type="radio" name="avatar" value="${a}" ${a===av?'checked':''}><span>${a}</span></label>`).join('')}</div>
  <label class="f" for="pn">Display name <span class="mut small">(doesn't have to be unique)</span></label><input id="pn" type="text" name="name" maxlength="30" value="${esc(p.name||'')}" required>
- <label class="f" for="pu">Username</label><input id="pu" type="text" name="username" maxlength="20" value="${esc(p.username||'')}" placeholder="letters, numbers, _" required autocapitalize="none" autocomplete="off"><div id="uhint" class="small" role="status" style="margin-top:6px"></div>
+ ${first?`<label class="f" for="pu">Username</label><input id="pu" type="text" name="username" maxlength="20" value="${esc(p.username||'')}" placeholder="letters, numbers, _" required autocapitalize="none" autocomplete="off"><div id="uhint" class="small" role="status" style="margin-top:6px"></div>`:''}
  <label class="f" for="pb">Bio <span class="mut small">(150 characters)</span></label><textarea id="pb" name="bio" maxlength="150" placeholder="Trying to sleep before midnight. Mostly failing.">${esc(p.bio||'')}</textarea>
- <label class="f" for="ppw">${first?'Password <span class="mut small">(at least 6 characters)</span>':'New password <span class="mut small">(leave blank to keep it)</span>'}</label><input id="ppw" type="password" name="pw" minlength="6" ${first?'required':''} autocomplete="new-password">
+ ${first?'<label class="f" for="ppw">Password <span class="mut small">(at least 6 characters)</span></label><input id="ppw" type="password" name="pw" minlength="6" required autocomplete="new-password">':'<p class="small mut" style="margin:12px 0 0">Change your username or password in Settings.</p>'}
  <div class="err" id="perr"></div><div class="btns" style="margin-top:16px"><button class="btn">${first?'Create my account':'Save profile'}</button>${first&&!isNew?'':'<button type="button" class="btn line" data-act="close">Cancel</button>'}</div></form>`;
 }
 function vOnboard(){
@@ -450,6 +451,14 @@ function vModal(){
   <div class="btns" style="margin-top:16px"><button class="btn">Join</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>`;
  if(M.k==='logout')body=`<h2>Log out of Habitor?</h2><p class="mut">Your habits, parties and trophies stay saved. Log back in any time to pick up where you left off.</p><div class="btns" style="margin-top:16px"><button class="btn danger" data-act="dologout">Log out</button><button class="btn ghost" data-act="other">Use another account</button><button class="btn line" data-act="close">Cancel</button></div>`;
  if(M.k==='other')body=otherModal(M.login);
+ if(M.k==='settings'){const p=me()||{};body=`<h2>Settings</h2><p class="mut">Your account details. Logged in as <b>@${esc(p.username||'')}</b>.</p>
+  <form data-form="settings"><h3 style="margin:18px 0 0;font-size:16px">Account</h3>
+  <label class="f" for="sn">Display name <span class="mut small">(doesn't have to be unique)</span></label><input id="sn" type="text" name="name" maxlength="30" value="${esc(p.name||'')}" required>
+  <label class="f" for="pu">Username <span class="mut small">(you log in with this)</span></label><input id="pu" type="text" name="username" maxlength="20" value="${esc(p.username||'')}" required autocapitalize="none" autocomplete="username"><div id="uhint" class="small" role="status" style="margin-top:6px"></div>
+  <h3 style="margin:22px 0 0;font-size:16px">Password</h3><p class="small mut" style="margin:4px 0 0">For your security your current password is never shown. Leave these blank to keep it.</p>
+  <label class="f" for="sp1">New password</label><input id="sp1" type="password" name="pw" minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
+  <label class="f" for="sp2">Confirm new password</label><input id="sp2" type="password" name="pw2" minlength="6" autocomplete="new-password">
+  <div class="err" id="serr"></div><div class="btns" style="margin-top:16px"><button class="btn">Save changes</button><button type="button" class="btn line" data-act="close">Close</button></div></form>`}
  if(M.k==='confirm')body=`<h2>Check your email</h2><p class="mut">We sent a link to <b>${esc(M.email)}</b>. Open it to confirm your account, then come back and log in.</p><div class="btns" style="margin-top:16px"><button class="btn" data-act="loginexisting">Log in</button><button class="btn line" data-act="close">Close</button></div>`;
  if(M.k==='scrlog'){const g=goals();body=`<div style="text-align:center"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5" fill="none" stroke="var(--co)" stroke-width="2"/><path d="M10.5 18.5h3" stroke="var(--co)" stroke-width="2" stroke-linecap="round"/></svg><h2 style="margin-top:6px">How much screen time today?</h2><p class="mut" style="margin:4px 0 0">Check Screen Time (iPhone) or Digital Wellbeing (Android), then enter today's total. Your limit is ${fmtMin(g.screenMin)}.</p></div>
   <form data-form="scrlog"><div class="two"><div><label class="f" for="sh2">Hours</label><input id="sh2" type="number" name="hh" min="0" max="24" placeholder="3" required></div><div><label class="f" for="sm2">Minutes</label><input id="sm2" type="number" name="mm" min="0" max="59" placeholder="20"></div></div>
@@ -663,8 +672,8 @@ async function switchTo(id){const sv=saved(),s=sv[id];if(!s)return;
  const {data,error}=await sb.auth.setSession({access_token:s.at,refresh_token:s.rt});
  if(error||!data.session){delete sv[id];setSaved(sv);toast('That login has expired. Please log in again.');S.modal={k:'other',login:true};render();return}
  LS.set('habitor-active',id);await rememberCurrent();await enter(data.session.user.id)}
-async function afterLogin(session){const had=savedAccts().length>0,known=!!saved()[session.user.id];
- if(!had||known){await enter(session.user.id);await rememberCurrent();return}
+async function afterLogin(session,signup){const had=savedAccts().length>0,known=!!saved()[session.user.id];
+ if(!had||known||signup){await enter(session.user.id);await rememberCurrent();return}
  await enter(session.user.id);S.modal={k:'save',id:session.user.id};render()}
 const acctRow=(id,s,cur)=>`<div class="row" style="border-top:1px solid var(--line)"><button class="frow sp" style="border:0" data-act="swacct" data-id="${esc(id)}"><span class="av">${esc(s.avatar||'🙂')}</span><span class="sp"><b>${esc(s.name||(s.username?'@'+s.username:'Account'))}</b><br><span class="small mut">${s.username?'@'+esc(s.username):''}${s.email&&!/@users\.habitor\.app$/.test(s.email)?' · '+esc(s.email):''}</span></span></button><button class="x" data-act="forget" data-id="${esc(id)}" aria-label="Remove ${esc(s.name||'account')} from this device">✕</button></div>`;
 function vOut(){const sv=saved(),ids=Object.keys(sv);
@@ -764,6 +773,7 @@ document.addEventListener('click',e=>{
  else if(a==='hsnooze'){const st=clone(priv()),t=Date.now()+600000;st.hrem={...(st.hrem||{})};(S.modal.ids||[]).forEach(id=>{st.hrem[id]={d:todayK(),snooze:t}});S.modal=null;savePriv(st);toast('I\'ll remind you in 10 minutes')}
  else if(a==='scrskip'){const st=clone(priv());st.scrAsk={d:todayK()};S.modal=null;savePriv(st)}
  else if(a==='scrsnooze'){const st=clone(priv());st.scrAsk={d:todayK(),snooze:Date.now()+1800000};S.modal=null;savePriv(st);toast('I\'ll ask again in 30 minutes')}
+ else if(a==='settings'){S.modal={k:'settings'};render()}
  else if(a==='calm'){S.calM=addMonths(S.calM,+b.dataset.n);render()}
  else if(a==='calday'){S.calSel=b.dataset.k;render()}
  else if(a==='openparty'){S.party=b.dataset.id;render();scrollTo(0,0)}
@@ -786,6 +796,19 @@ document.addEventListener('submit',e=>{
  else if(t==='screen'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}deferred=false;pushDay(S.day,{screenMin:hh*60+mm,src:'manual'});toast('Screen time saved')}
  else if(t==='chat'){const text=val('t').slice(0,1000);if(!text||!S.chat)return;const pid=pairId(S.uid,S.chat),[pa,pb]=pid.split('+'),tmp={tmp:1,t:text,at:Date.now()},by={...(S.chats[pid]||{})};by[S.uid]=[...(by[S.uid]||[]),tmp];S.chats={...S.chats,[pid]:by};markRead(pid);const i=$('#chatin');if(i)i.value='';const mm=$('#msgs');if(mm){mm.innerHTML=msgsHTML(pid);scrollTo(0,document.body.scrollHeight)}
   write('msg',()=>sb.from('messages').insert({a:pa,b:pb,sender:S.uid,body:text}).select().single().then(r=>{if(r.data){addMsg(r.data);soon()}return r}))}
+ else if(t==='settings'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),pw=String(F.get('pw')||''),pw2=String(F.get('pw2')||''),err=$('#serr'),btn=f.querySelector('button:not([type=button])'),cur=me()||{};
+  if(!name){err.textContent='Add a display name.';return}
+  if(!U_RE.test(u)){err.textContent='Username: 3–20 letters, numbers or underscores.';return}
+  if(pw||pw2){if(pw.length<6){err.textContent='New password must be at least 6 characters.';return}if(pw!==pw2){err.textContent="The two new passwords don't match.";return}}
+  const t0=takenBy(u);if(t0&&t0!==S.uid){err.textContent=`@${u} is already taken. Try another username.`;return}
+  if(name===cur.name&&u===cur.username&&!pw){S.modal=null;render();toast('Nothing to change');return}
+  if(btn){btn.disabled=true;btn.textContent='Saving…'}err.textContent='';
+  (async()=>{const reset=()=>{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Save changes'}};
+   if(name!==cur.name||u!==cur.username){const {error}=await sb.from('profiles').update({name,username:u}).eq('id',S.uid);
+    if(error){err.textContent=error.code==='23505'?`@${u} is already taken. Try another username.`:errText(error);reset();return}
+    S.profiles={...S.profiles,[S.uid]:{...cur,name,username:u}};updateSavedInfo()}
+   if(pw){const r=await sb.auth.updateUser({password:pw});if(r.error){err.textContent=/different|same/i.test(r.error.message)?'That is already your password. Choose a new one.':`Your password wasn't changed: ${r.error.message}`;reset();return}}
+   S.modal=null;deferred=false;render();toast(pw?(name!==cur.name||u!==cur.username?'Account and password updated':'Password changed'):'Account updated')})()}
  else if(t==='login'){const raw=val('u').replace(/^@/,''),pw=String(F.get('pw')||''),err=$('#lerr'),btn=f.querySelector('button:not([type=button])');
   const reset=()=>{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Log in'}};
   if(btn){btn.disabled=true;btn.textContent='Logging in…'}
@@ -803,7 +826,7 @@ document.addEventListener('submit',e=>{
  else if(t==='scrlog'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}
   const m=hh*60+mm,g=goals();S.modal=null;deferred=false;pushDay(todayK(),{screenMin:m,src:'manual'});toast(m<=g.screenMin?`Saved ${fmtMin(m)}: under your limit, nice!`:`Saved ${fmtMin(m)}: ${fmtMin(m-g.screenMin)} over your limit. There's a tip on Today.`)}
  else if(t==='goals'){const s=parseFloat(val('sleep')),sc=parseInt(val('screen'),10);if(!(s>=4&&s<=12&&sc>=15&&sc<=1440)){toast('Check your goals');return}const st=clone(priv());st.goals={sleepH:s,screenMin:sc,bed:val('bed')||'23:30',logAt:/^\d{2}:\d{2}$/.test(val('logAt'))?val('logAt'):''};deferred=false;savePriv(st);toast('Goals saved')}
- else if(t==='profile'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])'),isNew=!S.uid||f.dataset.new==='1',pw=String(F.get('pw')||'');
+ else if(t==='profile'){const name=val('name'),u=(f.querySelector('[name=username]')?val('username'):((me()||{}).username||'')).toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])'),isNew=!S.uid||f.dataset.new==='1',pw=String(F.get('pw')||'');
   if(pw&&pw.length<6){err.textContent='Password must be at least 6 characters.';return}
   if(!name){err.textContent='Add a display name.';return}
   if(!U_RE.test(u)){err.textContent='Username: 3–20 letters, numbers or underscores.';return}
@@ -817,7 +840,7 @@ document.addEventListener('submit',e=>{
     const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:{username:u,name,avatar,bio}}});
     if(error){err.textContent=/sending|email/i.test(error.message)?"Sign-ups aren't working right now. Please try again later.":/database/i.test(error.message)?`@${u} was just taken. Try another username.`:`Couldn't create the account: ${error.message}`;reset('Create my account');return}
     if(!data.session){err.textContent="Sign-ups aren't working right now. Please try again later.";reset('Create my account');return}
-    S.modal=null;await afterLogin(data.session);toast('Welcome to Habitor!');return}
+    S.modal=null;await afterLogin(data.session,true);toast('Welcome to Habitor! Your account is saved on this device.');return}
    const {error}=await sb.from('profiles').update({name,username:u,bio,avatar}).eq('id',S.uid);
    if(error){err.textContent=error.code==='23505'?`@${u} is already taken. Try another username.`:errText(error);reset('Save profile');return}
    if(pw){const r=await sb.auth.updateUser({password:pw});if(r.error){err.textContent=`Profile saved, but the password wasn't changed: ${r.error.message}`;reset('Save profile');return}}

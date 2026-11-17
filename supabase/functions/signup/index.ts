@@ -1,4 +1,4 @@
-// Public sign-up endpoint for Habitor accounts (username + email + password).
+// Public sign-up endpoint for Habitor accounts (username + password; email optional).
 // It is the server-side equivalent of /auth/v1/signup, so it does not require a JWT:
 // it validates its own input and creates an already-confirmed user that signs in with a
 // hidden address, so no confirmation email is ever sent. The person's real email is kept
@@ -32,7 +32,7 @@ Deno.serve(async (req: Request) => {
   if (!/^[a-z0-9_]{3,20}$/.test(username)) return json({ error: "invalid_username" }, 400);
   if (typeof password !== "string" || password.length < 6 || password.length > 72) return json({ error: "weak_password" }, 400);
   if (!name) return json({ error: "invalid_name" }, 400);
-  if (!EMAIL_RE.test(contact) || contact.length > 254) return json({ error: "invalid_email" }, 400);
+  if (contact && (!EMAIL_RE.test(contact) || contact.length > 254)) return json({ error: "invalid_email" }, 400);
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -41,9 +41,11 @@ Deno.serve(async (req: Request) => {
   const { data: taken, error: lookupError } = await admin.from("profiles").select("id").eq("username", username).maybeSingle();
   if (lookupError) return json({ error: "server_error" }, 500);
   if (taken) return json({ error: "username_taken" }, 409);
-  const { data: emailFree, error: emailError } = await admin.rpc("email_available", { e: contact });
-  if (emailError) return json({ error: "server_error" }, 500);
-  if (!emailFree) return json({ error: "email_taken" }, 409);
+  if (contact) {
+    const { data: emailFree, error: emailError } = await admin.rpc("email_available", { e: contact });
+    if (emailError) return json({ error: "server_error" }, 500);
+    if (!emailFree) return json({ error: "email_taken" }, 409);
+  }
 
   const signin = `${crypto.randomUUID()}@users.habitor.app`;
   const { data: created, error } = await admin.auth.admin.createUser({
@@ -58,7 +60,9 @@ Deno.serve(async (req: Request) => {
     if (error && /password/i.test(error.message)) return json({ error: "weak_password", detail: error.message }, 400);
     return json({ error: "create_failed" }, 500);
   }
-  const { error: contactError } = await admin.from("user_contact").insert({ user_id: created.user.id, email: contact });
+  const { error: contactError } = contact
+    ? await admin.from("user_contact").insert({ user_id: created.user.id, email: contact })
+    : { error: null };
   if (contactError) {
     // someone saved the same email a moment ago: undo this sign-up
     await admin.auth.admin.deleteUser(created.user.id);

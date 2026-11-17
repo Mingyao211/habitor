@@ -432,13 +432,12 @@ function profileForm(p,first,isNew){
  <label class="f" for="pn">Display name <span class="mut small">(doesn't have to be unique)</span></label><input id="pn" type="text" name="name" maxlength="30" value="${esc(p.name||'')}" required>
  <label class="f" for="pu">Username</label><input id="pu" type="text" name="username" maxlength="20" value="${esc(p.username||'')}" placeholder="letters, numbers, _" required autocapitalize="none" autocomplete="off"><div id="uhint" class="small" role="status" style="margin-top:6px"></div>
  <label class="f" for="pb">Bio <span class="mut small">(150 characters)</span></label><textarea id="pb" name="bio" maxlength="150" placeholder="Trying to sleep before midnight. Mostly failing.">${esc(p.bio||'')}</textarea>
- ${first?'<label class="f" for="pe">Email</label><input id="pe" type="email" name="email" required autocapitalize="none" autocomplete="email" placeholder="you@example.com">':''}
  <label class="f" for="ppw">${first?'Password <span class="mut small">(at least 6 characters)</span>':'New password <span class="mut small">(leave blank to keep it)</span>'}</label><input id="ppw" type="password" name="pw" minlength="6" ${first?'required':''} autocomplete="new-password">
  <div class="err" id="perr"></div><div class="btns" style="margin-top:16px"><button class="btn">${first?'Create my account':'Save profile'}</button>${first&&!isNew?'':'<button type="button" class="btn line" data-act="close">Cancel</button>'}</div></form>`;
 }
 function vOnboard(){
  return `<header class="top"><div class="in"><h1>Welcome to Habitor</h1><p>Track habits, sleep and screen time, then challenge your friends for a monthly trophy.</p></div></header>
- <main class="wrap lift">${banners()}<section class="card"><h2>Already have an account?</h2><p class="mut" style="margin:-4px 0 12px">Log in with your email and password.</p><button class="btn" data-act="loginexisting" style="width:100%">Log in</button></section>
+ <main class="wrap lift">${banners()}<section class="card"><h2>Already have an account?</h2><p class="mut" style="margin:-4px 0 12px">Log in with your username and password.</p><button class="btn" data-act="loginexisting" style="width:100%">Log in</button></section>
  <section class="card"><h2>New here? Create an account</h2>${profileForm(null,true)}</section></main>`;
 }
 function vModal(){
@@ -667,13 +666,13 @@ async function switchTo(id){const sv=saved(),s=sv[id];if(!s)return;
 async function afterLogin(session){const had=savedAccts().length>0,known=!!saved()[session.user.id];
  if(!had||known){await enter(session.user.id);await rememberCurrent();return}
  await enter(session.user.id);S.modal={k:'save',id:session.user.id};render()}
-const acctRow=(id,s,cur)=>`<div class="row" style="border-top:1px solid var(--line)"><button class="frow sp" style="border:0" data-act="swacct" data-id="${esc(id)}"><span class="av">${esc(s.avatar||'🙂')}</span><span class="sp"><b>${esc(s.name||s.email||'Account')}</b><br><span class="small mut">${s.username?'@'+esc(s.username)+' · ':''}${esc(s.email||'')}</span></span></button><button class="x" data-act="forget" data-id="${esc(id)}" aria-label="Remove ${esc(s.name||'account')} from this device">✕</button></div>`;
+const acctRow=(id,s,cur)=>`<div class="row" style="border-top:1px solid var(--line)"><button class="frow sp" style="border:0" data-act="swacct" data-id="${esc(id)}"><span class="av">${esc(s.avatar||'🙂')}</span><span class="sp"><b>${esc(s.name||(s.username?'@'+s.username:'Account'))}</b><br><span class="small mut">${s.username?'@'+esc(s.username):''}${s.email&&!/@users\.habitor\.app$/.test(s.email)?' · '+esc(s.email):''}</span></span></button><button class="x" data-act="forget" data-id="${esc(id)}" aria-label="Remove ${esc(s.name||'account')} from this device">✕</button></div>`;
 function vOut(){const sv=saved(),ids=Object.keys(sv);
  return `<main class="wrap" style="padding-top:48px"><div style="text-align:center"><div class="num" style="font-size:40px;color:var(--co-ink)">Habitor</div><p class="mut" style="margin:6px 0 22px">You're logged out. Choose an account.</p></div>
  <section class="card"><h2>Accounts on this device</h2>${ids.length?ids.map(id=>acctRow(id,sv[id])).join(''):'<div class="empty">No saved accounts yet.</div>'}</section>
  <button class="btn" data-act="other" style="width:100%">Use another account</button></main>`}
-function otherModal(login){return `<h2>${login?'Log in':'Use another account'}</h2><p class="mut">${login?'Enter the email and password of your Habitor account.':'Log in with your email and password, or create a new account.'}</p>
- <form data-form="login"><label class="f" for="lu">Email</label><input id="lu" type="email" name="email" required autocapitalize="none" autocomplete="email" placeholder="you@example.com">
+function otherModal(login){return `<h2>${login?'Log in':'Use another account'}</h2><p class="mut">${login?'Enter your Habitor username and password.':'Log in with your username and password, or create a new account.'}</p>
+ <form data-form="login"><label class="f" for="lu">Username</label><input id="lu" type="text" name="u" required autocapitalize="none" autocomplete="username" placeholder="@username">
  <label class="f" for="lp">Password</label><input id="lp" type="password" name="pw" required autocomplete="current-password"><div class="err" id="lerr"></div>
  <div class="btns" style="margin-top:14px"><button class="btn">Log in</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>
  ${login?'':'<hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><p style="margin:0 0 10px;font-weight:600">New to Habitor?</p><button class="btn ghost" data-act="newacct" style="width:100%">Create a new account</button>'}`}
@@ -787,10 +786,16 @@ document.addEventListener('submit',e=>{
  else if(t==='screen'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}deferred=false;pushDay(S.day,{screenMin:hh*60+mm,src:'manual'});toast('Screen time saved')}
  else if(t==='chat'){const text=val('t').slice(0,1000);if(!text||!S.chat)return;const pid=pairId(S.uid,S.chat),[pa,pb]=pid.split('+'),tmp={tmp:1,t:text,at:Date.now()},by={...(S.chats[pid]||{})};by[S.uid]=[...(by[S.uid]||[]),tmp];S.chats={...S.chats,[pid]:by};markRead(pid);const i=$('#chatin');if(i)i.value='';const mm=$('#msgs');if(mm){mm.innerHTML=msgsHTML(pid);scrollTo(0,document.body.scrollHeight)}
   write('msg',()=>sb.from('messages').insert({a:pa,b:pb,sender:S.uid,body:text}).select().single().then(r=>{if(r.data){addMsg(r.data);soon()}return r}))}
- else if(t==='login'){const email=val('email'),pw=String(F.get('pw')||''),err=$('#lerr'),btn=f.querySelector('button:not([type=button])');
+ else if(t==='login'){const raw=val('u').replace(/^@/,''),pw=String(F.get('pw')||''),err=$('#lerr'),btn=f.querySelector('button:not([type=button])');
+  const reset=()=>{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Log in'}};
   if(btn){btn.disabled=true;btn.textContent='Logging in…'}
-  (async()=>{if(S.uid&&saved()[S.uid])await rememberCurrent();const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
-   if(error||!data.session){err.textContent=/confirm/i.test(error&&error.message||'')?'Please confirm your email first, then log in.':'Wrong email or password. Try again.';if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Log in'}return}
+  (async()=>{let email=raw;
+   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(raw)){const r=await sb.rpc('login_email',{u:raw.toLowerCase()});
+    if(r.error){err.textContent="Couldn't reach Habitor's server. Try again.";reset();return}
+    if(!r.data){err.textContent='No account with that username. If you signed up with an email, log in with your email instead.';reset();return}
+    email=r.data}
+   if(S.uid&&saved()[S.uid])await rememberCurrent();const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
+   if(error||!data.session){err.textContent='Wrong username or password. Try again.';reset();return}
    S.modal=null;await afterLogin(data.session)})()}
  else if(t==='event'){const title=val('title').slice(0,80),time=val('time'),before=+val('before')||0;if(!title||!/^\d{2}:\d{2}$/.test(time)||!S.calSel)return;
   const e={id:rid(),date:S.calSel,time,title,before,fired:false};const st=clone(priv());st.events=[...evs(),e].slice(-500);
@@ -798,19 +803,21 @@ document.addEventListener('submit',e=>{
  else if(t==='scrlog'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}
   const m=hh*60+mm,g=goals();S.modal=null;deferred=false;pushDay(todayK(),{screenMin:m,src:'manual'});toast(m<=g.screenMin?`Saved ${fmtMin(m)}: under your limit, nice!`:`Saved ${fmtMin(m)}: ${fmtMin(m-g.screenMin)} over your limit. There's a tip on Today.`)}
  else if(t==='goals'){const s=parseFloat(val('sleep')),sc=parseInt(val('screen'),10);if(!(s>=4&&s<=12&&sc>=15&&sc<=1440)){toast('Check your goals');return}const st=clone(priv());st.goals={sleepH:s,screenMin:sc,bed:val('bed')||'23:30',logAt:/^\d{2}:\d{2}$/.test(val('logAt'))?val('logAt'):''};deferred=false;savePriv(st);toast('Goals saved')}
- else if(t==='profile'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])'),isNew=!S.uid||f.dataset.new==='1',pw=String(F.get('pw')||''),email=val('email');
+ else if(t==='profile'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])'),isNew=!S.uid||f.dataset.new==='1',pw=String(F.get('pw')||'');
   if(pw&&pw.length<6){err.textContent='Password must be at least 6 characters.';return}
   if(!name){err.textContent='Add a display name.';return}
   if(!U_RE.test(u)){err.textContent='Username: 3–20 letters, numbers or underscores.';return}
   const reset=t=>{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent=t}};
   if(btn){btn.disabled=true;btn.textContent=isNew?'Creating account…':'Saving…'}err.textContent='';
   (async()=>{
-   if(isNew){if(!email||!pw){err.textContent='Add your email and a password.';reset('Create my account');return}
+   if(isNew){if(!pw){err.textContent='Add a password.';reset('Create my account');return}
+    const email=`${crypto.randomUUID()}@users.habitor.app`;
     const av=await sb.rpc('username_available',{u});if(av.error||!av.data){err.textContent=av.error?"Couldn't check the username. Try again.":`@${u} is already taken. Try another username.`;reset('Create my account');return}
     if(S.uid&&saved()[S.uid])await rememberCurrent();
-    const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:{username:u,name,avatar,bio},emailRedirectTo:location.origin}});
-    if(error){err.textContent=/registered|exists/i.test(error.message)?'That email already has an account. Log in instead.':/database/i.test(error.message)?`@${u} was just taken. Try another username.`:`Couldn't create the account: ${error.message}`;reset('Create my account');return}
-    S.modal=null;if(data.session){await afterLogin(data.session);toast('Welcome to Habitor!')}else{S.modal={k:'confirm',email};render()}return}
+    const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:{username:u,name,avatar,bio}}});
+    if(error){err.textContent=/sending|email/i.test(error.message)?"Sign-ups aren't working right now. Please try again later.":/database/i.test(error.message)?`@${u} was just taken. Try another username.`:`Couldn't create the account: ${error.message}`;reset('Create my account');return}
+    if(!data.session){err.textContent="Sign-ups aren't working right now. Please try again later.";reset('Create my account');return}
+    S.modal=null;await afterLogin(data.session);toast('Welcome to Habitor!');return}
    const {error}=await sb.from('profiles').update({name,username:u,bio,avatar}).eq('id',S.uid);
    if(error){err.textContent=error.code==='23505'?`@${u} is already taken. Try another username.`:errText(error);reset('Save profile');return}
    if(pw){const r=await sb.auth.updateUser({password:pw});if(r.error){err.textContent=`Profile saved, but the password wasn't changed: ${r.error.message}`;reset('Save profile');return}}

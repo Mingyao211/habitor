@@ -256,7 +256,7 @@ async function loadAll(first){const uid=S.uid;if(!uid)return;
  S.friends=Object.fromEntries((fr||[]).map(r=>[pairId(r.a,r.b),{a:r.a,b:r.b,from:r.from_id,to:r.to_id,status:r.status}]));
  const chats={};for(const r of (ms||[]).slice().reverse()){const pid=pairId(r.a,r.b);((chats[pid]??={})[r.sender]??=[]).push({id:r.id,t:r.body,at:Date.parse(r.created_at)})}
  for(const [pid,by] of Object.entries(S.chats))for(const [u,arr] of Object.entries(by))for(const m of arr)if(m.tmp)((chats[pid]??={})[u]??=[]).push(m);S.chats=chats;
- if(first){const d=us&&us.data;S.priv=d&&typeof d==='object'?{habits:[],logs:{},goals:{},...d}:{habits:[],logs:{},goals:{}};if(S.priv.skin)applySkin(S.priv.skin)}
+ if(first){sb.from('user_contact').select('email').eq('user_id',uid).maybeSingle().then(async r=>{let e=r.data&&r.data.email;if(!e){const ss=(await sb.auth.getSession()).data.session;const ae=ss&&ss.user&&ss.user.email;if(ae&&!/@users\.habitor\.app$/.test(ae))e=ae}if(uid===S.uid){S.email=e||'';if(S.modal&&S.modal.k==='settings')render()}});const d=us&&us.data;S.priv=d&&typeof d==='object'?{habits:[],logs:{},goals:{},...d}:{habits:[],logs:{},goals:{}};if(S.priv.skin)applySkin(S.priv.skin)}
  S.loaded.p=true;S.loaded.v=true;ready();return true}
 function scheduleReload(){clearTimeout(reloadTimer);reloadTimer=setTimeout(()=>loadAll(false),500)}
 function subscribeRT(){if(rt){sb.removeChannel(rt);rt=null}if(!S.uid)return;rt=sb.channel('habitor-'+S.uid);
@@ -433,12 +433,13 @@ function profileForm(p,first,isNew){
  <label class="f" for="pn">Display name <span class="mut small">(doesn't have to be unique)</span></label><input id="pn" type="text" name="name" maxlength="30" value="${esc(p.name||'')}" required>
  ${first?`<label class="f" for="pu">Username</label><input id="pu" type="text" name="username" maxlength="20" value="${esc(p.username||'')}" placeholder="letters, numbers, _" required autocapitalize="none" autocomplete="off"><div id="uhint" class="small" role="status" style="margin-top:6px"></div>`:''}
  <label class="f" for="pb">Bio <span class="mut small">(150 characters)</span></label><textarea id="pb" name="bio" maxlength="150" placeholder="Trying to sleep before midnight. Mostly failing.">${esc(p.bio||'')}</textarea>
+ ${first?'<label class="f" for="pe">Email</label><input id="pe" type="email" name="email" required autocapitalize="none" autocomplete="email" placeholder="you@example.com"><p class="small mut" style="margin:6px 0 0">Kept private. You can log in with it or your username.</p>':''}
  ${first?'<label class="f" for="ppw">Password <span class="mut small">(at least 6 characters)</span></label><input id="ppw" type="password" name="pw" minlength="6" required autocomplete="new-password">':'<p class="small mut" style="margin:12px 0 0">Change your username or password in Settings.</p>'}
  <div class="err" id="perr"></div><div class="btns" style="margin-top:16px"><button class="btn">${first?'Create my account':'Save profile'}</button>${first&&!isNew?'':'<button type="button" class="btn line" data-act="close">Cancel</button>'}</div></form>`;
 }
 function vOnboard(){
  return `<header class="top"><div class="in"><h1>Welcome to Habitor</h1><p>Track habits, sleep and screen time, then challenge your friends for a monthly trophy.</p></div></header>
- <main class="wrap lift">${banners()}<section class="card"><h2>Already have an account?</h2><p class="mut" style="margin:-4px 0 12px">Log in with your username and password.</p><button class="btn" data-act="loginexisting" style="width:100%">Log in</button></section>
+ <main class="wrap lift">${banners()}<section class="card"><h2>Already have an account?</h2><p class="mut" style="margin:-4px 0 12px">Log in with your username or email and password.</p><button class="btn" data-act="loginexisting" style="width:100%">Log in</button></section>
  <section class="card"><h2>New here? Create an account</h2>${profileForm(null,true)}</section></main>`;
 }
 function vModal(){
@@ -455,6 +456,7 @@ function vModal(){
   <form data-form="settings"><h3 style="margin:18px 0 0;font-size:16px">Account</h3>
   <label class="f" for="sn">Display name <span class="mut small">(doesn't have to be unique)</span></label><input id="sn" type="text" name="name" maxlength="30" value="${esc(p.name||'')}" required>
   <label class="f" for="pu">Username <span class="mut small">(you log in with this)</span></label><input id="pu" type="text" name="username" maxlength="20" value="${esc(p.username||'')}" required autocapitalize="none" autocomplete="username"><div id="uhint" class="small" role="status" style="margin-top:6px"></div>
+  <label class="f" for="se">Email <span class="mut small">(private, you can log in with it)</span></label><input id="se" type="email" name="email" maxlength="254" value="${esc(S.email||'')}" autocapitalize="none" autocomplete="email" placeholder="you@example.com">
   <h3 style="margin:22px 0 0;font-size:16px">Password</h3><p class="small mut" style="margin:4px 0 0">For your security your current password is never shown. Leave these blank to keep it.</p>
   <label class="f" for="sp1">New password</label><input id="sp1" type="password" name="pw" minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
   <label class="f" for="sp2">Confirm new password</label><input id="sp2" type="password" name="pw2" minlength="6" autocomplete="new-password">
@@ -680,8 +682,8 @@ function vOut(){const sv=saved(),ids=Object.keys(sv);
  return `<main class="wrap" style="padding-top:48px"><div style="text-align:center"><div class="num" style="font-size:40px;color:var(--co-ink)">Habitor</div><p class="mut" style="margin:6px 0 22px">You're logged out. Choose an account.</p></div>
  <section class="card"><h2>Accounts on this device</h2>${ids.length?ids.map(id=>acctRow(id,sv[id])).join(''):'<div class="empty">No saved accounts yet.</div>'}</section>
  <button class="btn" data-act="other" style="width:100%">Use another account</button></main>`}
-function otherModal(login){return `<h2>${login?'Log in':'Use another account'}</h2><p class="mut">${login?'Enter your Habitor username and password.':'Log in with your username and password, or create a new account.'}</p>
- <form data-form="login"><label class="f" for="lu">Username</label><input id="lu" type="text" name="u" required autocapitalize="none" autocomplete="username" placeholder="@username">
+function otherModal(login){return `<h2>${login?'Log in':'Use another account'}</h2><p class="mut">${login?'Enter your Habitor username or email, and your password.':'Log in with your username or email, or create a new account.'}</p>
+ <form data-form="login"><label class="f" for="lu">Username or email</label><input id="lu" type="text" name="u" required autocapitalize="none" autocomplete="username" placeholder="@username or you@example.com">
  <label class="f" for="lp">Password</label><input id="lp" type="password" name="pw" required autocomplete="current-password"><div class="err" id="lerr"></div>
  <div class="btns" style="margin-top:14px"><button class="btn">Log in</button><button type="button" class="btn line" data-act="close">Cancel</button></div></form>
  ${login?'':'<hr style="border:0;border-top:1px solid var(--line);margin:20px 0"><p style="margin:0 0 10px;font-weight:600">New to Habitor?</p><button class="btn ghost" data-act="newacct" style="width:100%">Create a new account</button>'}`}
@@ -796,29 +798,32 @@ document.addEventListener('submit',e=>{
  else if(t==='screen'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}deferred=false;pushDay(S.day,{screenMin:hh*60+mm,src:'manual'});toast('Screen time saved')}
  else if(t==='chat'){const text=val('t').slice(0,1000);if(!text||!S.chat)return;const pid=pairId(S.uid,S.chat),[pa,pb]=pid.split('+'),tmp={tmp:1,t:text,at:Date.now()},by={...(S.chats[pid]||{})};by[S.uid]=[...(by[S.uid]||[]),tmp];S.chats={...S.chats,[pid]:by};markRead(pid);const i=$('#chatin');if(i)i.value='';const mm=$('#msgs');if(mm){mm.innerHTML=msgsHTML(pid);scrollTo(0,document.body.scrollHeight)}
   write('msg',()=>sb.from('messages').insert({a:pa,b:pb,sender:S.uid,body:text}).select().single().then(r=>{if(r.data){addMsg(r.data);soon()}return r}))}
- else if(t==='settings'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),pw=String(F.get('pw')||''),pw2=String(F.get('pw2')||''),err=$('#serr'),btn=f.querySelector('button:not([type=button])'),cur=me()||{};
+ else if(t==='settings'){const name=val('name'),u=val('username').toLowerCase().replace(/^@/,''),em=val('email'),pw=String(F.get('pw')||''),pw2=String(F.get('pw2')||''),err=$('#serr'),btn=f.querySelector('button:not([type=button])'),cur=me()||{};
   if(!name){err.textContent='Add a display name.';return}
   if(!U_RE.test(u)){err.textContent='Username: 3–20 letters, numbers or underscores.';return}
+  if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){err.textContent='Enter a valid email address.';return}
+  const emChanged=em.toLowerCase()!==(S.email||'').toLowerCase();
   if(pw||pw2){if(pw.length<6){err.textContent='New password must be at least 6 characters.';return}if(pw!==pw2){err.textContent="The two new passwords don't match.";return}}
   const t0=takenBy(u);if(t0&&t0!==S.uid){err.textContent=`@${u} is already taken. Try another username.`;return}
-  if(name===cur.name&&u===cur.username&&!pw){S.modal=null;render();toast('Nothing to change');return}
+  if(name===cur.name&&u===cur.username&&!pw&&!emChanged){S.modal=null;render();toast('Nothing to change');return}
   if(btn){btn.disabled=true;btn.textContent='Saving…'}err.textContent='';
   (async()=>{const reset=()=>{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Save changes'}};
    if(name!==cur.name||u!==cur.username){const {error}=await sb.from('profiles').update({name,username:u}).eq('id',S.uid);
     if(error){err.textContent=error.code==='23505'?`@${u} is already taken. Try another username.`:errText(error);reset();return}
     S.profiles={...S.profiles,[S.uid]:{...cur,name,username:u}};updateSavedInfo()}
+   if(emChanged){const q=em?sb.from('user_contact').upsert({user_id:S.uid,email:em,updated_at:new Date().toISOString()}):sb.from('user_contact').delete().eq('user_id',S.uid);const {error}=await q;
+    if(error){err.textContent=error.code==='23505'?'That email is already used by another account.':errText(error);reset();return}S.email=em}
    if(pw){const r=await sb.auth.updateUser({password:pw});if(r.error){err.textContent=/different|same/i.test(r.error.message)?'That is already your password. Choose a new one.':`Your password wasn't changed: ${r.error.message}`;reset();return}}
-   S.modal=null;deferred=false;render();toast(pw?(name!==cur.name||u!==cur.username?'Account and password updated':'Password changed'):'Account updated')})()}
+   S.modal=null;deferred=false;render();toast(pw?(name!==cur.name||u!==cur.username||emChanged?'Account and password updated':'Password changed'):'Account updated')})()}
  else if(t==='login'){const raw=val('u').replace(/^@/,''),pw=String(F.get('pw')||''),err=$('#lerr'),btn=f.querySelector('button:not([type=button])');
   const reset=()=>{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent='Log in'}};
   if(btn){btn.disabled=true;btn.textContent='Logging in…'}
-  (async()=>{let email=raw;
-   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(raw)){const r=await sb.rpc('login_email',{u:raw.toLowerCase()});
-    if(r.error){err.textContent="Couldn't reach Habitor's server. Try again.";reset();return}
-    if(!r.data){err.textContent='No account with that username. If you signed up with an email, log in with your email instead.';reset();return}
-    email=r.data}
+  (async()=>{const isMail=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(raw);const r=await sb.rpc('login_email',{u:raw});
+   if(r.error){err.textContent="Couldn't reach Habitor's server. Try again.";reset();return}
+   let email=r.data||(isMail?raw:null);
+   if(!email){err.textContent='No account with that username or email.';reset();return}
    if(S.uid&&saved()[S.uid])await rememberCurrent();const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
-   if(error||!data.session){err.textContent='Wrong username or password. Try again.';reset();return}
+   if(error||!data.session){err.textContent='Wrong username, email or password. Try again.';reset();return}
    S.modal=null;await afterLogin(data.session)})()}
  else if(t==='event'){const title=val('title').slice(0,80),time=val('time'),before=+val('before')||0;if(!title||!/^\d{2}:\d{2}$/.test(time)||!S.calSel)return;
   const e={id:rid(),date:S.calSel,time,title,before,fired:false};const st=clone(priv());st.events=[...evs(),e].slice(-500);
@@ -826,19 +831,20 @@ document.addEventListener('submit',e=>{
  else if(t==='scrlog'){const hh=parseInt(val('hh')||'0',10),mm=parseInt(val('mm')||'0',10);if(!(hh>=0&&hh<=24&&mm>=0&&mm<60)||hh*60+mm>1440){toast('Enter a time up to 24 hours');return}
   const m=hh*60+mm,g=goals();S.modal=null;deferred=false;pushDay(todayK(),{screenMin:m,src:'manual'});toast(m<=g.screenMin?`Saved ${fmtMin(m)}: under your limit, nice!`:`Saved ${fmtMin(m)}: ${fmtMin(m-g.screenMin)} over your limit. There's a tip on Today.`)}
  else if(t==='goals'){const s=parseFloat(val('sleep')),sc=parseInt(val('screen'),10);if(!(s>=4&&s<=12&&sc>=15&&sc<=1440)){toast('Check your goals');return}const st=clone(priv());st.goals={sleepH:s,screenMin:sc,bed:val('bed')||'23:30',logAt:/^\d{2}:\d{2}$/.test(val('logAt'))?val('logAt'):''};deferred=false;savePriv(st);toast('Goals saved')}
- else if(t==='profile'){const name=val('name'),u=(f.querySelector('[name=username]')?val('username'):((me()||{}).username||'')).toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])'),isNew=!S.uid||f.dataset.new==='1',pw=String(F.get('pw')||'');
+ else if(t==='profile'){const name=val('name'),u=(f.querySelector('[name=username]')?val('username'):((me()||{}).username||'')).toLowerCase().replace(/^@/,''),bio=val('bio').slice(0,150),avatar=val('avatar')||AV[0],err=$('#perr'),btn=f.querySelector('button:not([type=button])'),isNew=!S.uid||f.dataset.new==='1',pw=String(F.get('pw')||''),email=val('email');
   if(pw&&pw.length<6){err.textContent='Password must be at least 6 characters.';return}
   if(!name){err.textContent='Add a display name.';return}
   if(!U_RE.test(u)){err.textContent='Username: 3–20 letters, numbers or underscores.';return}
   const reset=t=>{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent=t}};
   if(btn){btn.disabled=true;btn.textContent=isNew?'Creating account…':'Saving…'}err.textContent='';
   (async()=>{
-   if(isNew){if(!pw){err.textContent='Add a password.';reset('Create my account');return}
+   if(isNew){if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){err.textContent='Add a valid email address.';reset('Create my account');return}
+    if(!pw){err.textContent='Add a password.';reset('Create my account');return}
     const av=await sb.rpc('username_available',{u});if(av.error||!av.data){err.textContent=av.error?"Couldn't check the username. Try again.":`@${u} is already taken. Try another username.`;reset('Create my account');return}
     if(S.uid&&saved()[S.uid])await rememberCurrent();
-    const made=await sb.functions.invoke('signup',{body:{username:u,password:pw,name,avatar,bio}});
+    const made=await sb.functions.invoke('signup',{body:{username:u,password:pw,name,avatar,bio,email}});
     if(made.error||!made.data||!made.data.email){let code='';try{code=(await made.error.context.json()).error}catch(e){}
-     err.textContent=code==='username_taken'?`@${u} is already taken. Try another username.`:code==='weak_password'?'Password must be 6 to 72 characters.':code==='invalid_username'?'Username: 3–20 letters, numbers or underscores.':"Couldn't create the account. Check your connection and try again.";reset('Create my account');return}
+     err.textContent=code==='username_taken'?`@${u} is already taken. Try another username.`:code==='email_taken'?'That email already has an account. Log in instead.':code==='invalid_email'?'Add a valid email address.':code==='weak_password'?'Password must be 6 to 72 characters.':code==='invalid_username'?'Username: 3–20 letters, numbers or underscores.':"Couldn't create the account. Check your connection and try again.";reset('Create my account');return}
     const {data,error}=await sb.auth.signInWithPassword({email:made.data.email,password:pw});
     if(error||!data.session){err.textContent='Your account was created. Please log in with your username and password.';reset('Create my account');return}
     S.modal=null;await afterLogin(data.session,true);toast('Welcome to Habitor! Your account is saved on this device.');return}

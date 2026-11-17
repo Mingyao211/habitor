@@ -834,12 +834,13 @@ document.addEventListener('submit',e=>{
   if(btn){btn.disabled=true;btn.textContent=isNew?'Creating account…':'Saving…'}err.textContent='';
   (async()=>{
    if(isNew){if(!pw){err.textContent='Add a password.';reset('Create my account');return}
-    const email=`${crypto.randomUUID()}@users.habitor.app`;
     const av=await sb.rpc('username_available',{u});if(av.error||!av.data){err.textContent=av.error?"Couldn't check the username. Try again.":`@${u} is already taken. Try another username.`;reset('Create my account');return}
     if(S.uid&&saved()[S.uid])await rememberCurrent();
-    const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:{username:u,name,avatar,bio}}});
-    if(error){err.textContent=/sending|email/i.test(error.message)?"Sign-ups aren't working right now. Please try again later.":/database/i.test(error.message)?`@${u} was just taken. Try another username.`:`Couldn't create the account: ${error.message}`;reset('Create my account');return}
-    if(!data.session){err.textContent="Sign-ups aren't working right now. Please try again later.";reset('Create my account');return}
+    const made=await sb.functions.invoke('signup',{body:{username:u,password:pw,name,avatar,bio}});
+    if(made.error||!made.data||!made.data.email){let code='';try{code=(await made.error.context.json()).error}catch(e){}
+     err.textContent=code==='username_taken'?`@${u} is already taken. Try another username.`:code==='weak_password'?'Password must be 6 to 72 characters.':code==='invalid_username'?'Username: 3–20 letters, numbers or underscores.':"Couldn't create the account. Check your connection and try again.";reset('Create my account');return}
+    const {data,error}=await sb.auth.signInWithPassword({email:made.data.email,password:pw});
+    if(error||!data.session){err.textContent='Your account was created. Please log in with your username and password.';reset('Create my account');return}
     S.modal=null;await afterLogin(data.session,true);toast('Welcome to Habitor! Your account is saved on this device.');return}
    const {error}=await sb.from('profiles').update({name,username:u,bio,avatar}).eq('id',S.uid);
    if(error){err.textContent=error.code==='23505'?`@${u} is already taken. Try another username.`:errText(error);reset('Save profile');return}
